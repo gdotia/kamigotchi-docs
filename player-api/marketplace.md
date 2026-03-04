@@ -208,7 +208,14 @@ console.log("Listing cancelled, Kami restored to RESTING");
 
 ### WETH Setup
 
-Offers use **WETH** (not native ETH). Before making offers, the buyer must approve WETH spending to the **KamiMarketVault** contract:
+Offers use **WETH** (not native ETH). Before making offers, the buyer must approve WETH spending to the **KamiMarketVault** contract.
+
+> **Getting WETH:** If you only have native ETH, wrap it first:
+> ```javascript
+> const weth = new ethers.Contract(WETH_ADDRESS, ["function deposit() payable"], ownerSigner);
+> await (await weth.deposit({ value: ethers.parseEther("0.1") })).wait();
+> ```
+> See [Chain Configuration — WETH](../chain-configuration.md#weth-wrapped-eth) for details.
 
 ```javascript
 const WETH_ADDRESS = "0xE1Ff7038eAAAF027031688E1535a055B2Bac2546";

@@ -11,7 +11,7 @@ If you are starting from zero, run through [Agent Bootstrap](../agent-bootstrap.
 - **Node.js** v18+ and **ethers.js v6**
 - **ESM mode** enabled (`"type": "module"` in `package.json`)
 - **Environment variables** set for `OWNER_PRIVATE_KEY` and `OPERATOR_PRIVATE_KEY`
-- A wallet with $ETH on Yominet for gas (see [Chain Configuration](../chain-configuration.md))
+- Two EOAs (Owner + Operator) with $ETH on Yominet for gas (see [Chain Configuration](../chain-configuration.md))
 - The World contract address
 
 ```bash
@@ -89,6 +89,15 @@ async function getSystem(systemId, abi, signer) {
   const address = await getSystemAddress(systemId);
   return new ethers.Contract(address, abi, signer);
 }
+
+// --- Yominet Gas Settings ---
+// Yominet uses flat gas pricing. Hardcode these overrides instead of relying on gas estimation.
+const TX_OVERRIDES = {
+  maxFeePerGas: 2500000n,       // 0.0025 gwei
+  maxPriorityFeePerGas: 0n,
+};
+
+// Usage: const tx = await system.executeTyped(args, { ...TX_OVERRIDES });
 ```
 
 > **Important:** In ethers v6, pass `chainId` as a number (not `BigInt`) in the provider network object.
@@ -272,6 +281,23 @@ const getter = new ethers.Contract(getterAddr, GETTER_ABI, provider);
 // Read without spending gas
 const kamiData = await getter.getKami(kamiId);
 const accountData = await getter.getAccount(accountId);
+```
+
+### Check Balances
+
+```javascript
+// Check native ETH balance
+const balance = await provider.getBalance(ownerSigner.address);
+console.log("ETH balance:", ethers.formatEther(balance));
+
+// Check WETH balance
+const WETH = new ethers.Contract(
+  "0xE1Ff7038eAAAF027031688E1535a055B2Bac2546",
+  ["function balanceOf(address) view returns (uint256)"],
+  provider
+);
+const wethBal = await WETH.balanceOf(ownerSigner.address);
+console.log("WETH balance:", ethers.formatEther(wethBal));
 ```
 
 ### Reading Game State — Practical Tips

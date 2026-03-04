@@ -136,6 +136,8 @@ Yominet has several distinct currency types. Understanding the differences is cr
 
 WETH is needed for marketplace offers (which use ERC-20 approvals).
 
+> **How to get WETH on Yominet:** WETH is the ERC-20 wrapped version of native ETH. To get WETH, call `deposit()` on the WETH contract and send native ETH with the transaction. The WETH contract on Yominet works identically to WETH on Ethereum mainnet.
+
 ### Wrapping and Unwrapping ETH
 
 ```javascript

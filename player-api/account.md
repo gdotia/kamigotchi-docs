@@ -47,7 +47,22 @@ console.log("Account registered!");
 ### Notes
 
 - Each owner wallet can only register **one account**.
-- **Name rules:** Names must be 1-16 bytes, unique across all accounts. Alphanumeric characters are recommended.
+- **Idempotency check:** To avoid the `"Account: exists for Owner"` revert on restart, check registration status first:
+  ```javascript
+  const getter = new ethers.Contract(getterAddr, GETTER_ABI, provider);
+  const accountId = BigInt(ownerSigner.address);
+  try {
+    const data = await getter.getAccount(accountId);
+    if (data.name !== "") {
+      console.log("Already registered as:", data.name);
+      // Skip registration
+    }
+  } catch (_) {
+    // Not registered — proceed with register()
+  }
+  ```
+- **Name format:** Names are validated by **byte length** (1-16 bytes), not character count. Multi-byte UTF-8 characters (e.g., emoji, CJK) consume more than 1 byte each. Stick to ASCII alphanumeric characters for predictable length. Names must be unique across all accounts.
+- **Operator address reuse:** Each operator address can only be assigned to one account. Using the same operator key for two accounts will revert with `"Account: exists for Operator"`.
 - The operator wallet can be changed later with `set.operator()`.
 - In the official client, Privy creates and manages the operator wallet automatically.
 - **Starting room:** New accounts are placed in **Room 1** (Misty Riverside). The contract sets `IndexRoomComponent` to `1` in `LibAccount.create()`.
@@ -104,6 +119,8 @@ Players **cannot** move to any arbitrary room — movement is restricted to **co
 3. **Access gates:** Even if a room is reachable, it may have **gate conditions** that must be met (e.g., quest completion, owning a specific item). If conditions fail, the move reverts with `"AccMove: inaccessible room"`.
 
 The move system (`AccountMoveSystem`) checks reachability first (`LibRoom.isReachable`), then accessibility (`LibRoom.isAccessible`), then deducts stamina. Each move costs stamina (configured via `ACCOUNT_STAMINA` config index 2) and grants XP (config index 3).
+
+> **Stamina:** Each move costs stamina and grants XP. Current stamina is readable via `getAccount(accountId).currStamina`. Stamina regenerates over time on-chain. If stamina reaches 0, moves will revert. Check stamina before moving in bot loops.
 
 ---
 

@@ -169,6 +169,32 @@ console.log("State:", kamiData.state);      // "RESTING", "HARVESTING", "DEAD", 
 
 To list all Kamis owned by your account, use the **`IDOwnsKamiComponent`** on-chain, or call `getKami()` with known entity IDs. The `LibAccount.getKamis(accID)` function returns all Kami entity IDs owned by an account — this can be queried through the component directly.
 
+### After Newbie Vendor or Marketplace Purchase
+
+After buying a Kami, you need its token index to derive the entity ID. Use the `IDOwnsKamiComponent` to find all Kamis owned by your account:
+
+```javascript
+// Find your Kami after purchase using component read
+const OWNS_KAMI_ABI = ["function getEntitiesWithValue(uint256) view returns (uint256[])"];
+const ownsKamiAddr = await getComponentAddress("component.IDOwnsKami");
+const ownsKami = new ethers.Contract(ownsKamiAddr, OWNS_KAMI_ABI, provider);
+
+const accountId = BigInt(ownerSigner.address);
+const myKamiIds = await ownsKami.getEntitiesWithValue(accountId);
+
+// Get token index for each Kami
+const getter = new ethers.Contract(getterAddr, GETTER_ABI, provider);
+for (const kamiId of myKamiIds) {
+  const data = await getter.getKami(kamiId);
+  console.log(`Kami #${data.index}: ${data.name || "(unnamed)"} — ${data.state}`);
+}
+
+// Use the first Kami's entity ID for harvesting, etc.
+const myKamiEntityId = myKamiIds[0];
+```
+
+See [Reading On-Chain Components](../contracts/ids-and-abis.md#reading-on-chain-components) for the `getComponentAddress()` helper.
+
 ---
 
 ## Harvest Entity IDs
