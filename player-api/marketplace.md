@@ -61,10 +61,12 @@ To discover order IDs:
 3. **From the indexer** — query the off-chain indexer for active orders
 
 ```javascript
-// Example: decode the listing ID from the transaction return value
+// Example: get listing tx hash, then resolve listing ID from indexer/events
 const listTx = await listSystem.executeTyped(kamiIndex, price, expiry);
 const receipt = await listTx.wait();
-// The listing entity ID is returned by the system — decode from logs or use staticCall
+console.log("Listing tx hash:", receipt.hash);
+// Resolve listing ID from confirmed events/indexer output keyed by receipt.hash.
+// Avoid staticCall-generated IDs in production because IDs are non-deterministic.
 ```
 
 ---
@@ -334,10 +336,17 @@ const price = await vendorSystem.calcPrice();
 console.log("Vendor price:", ethers.formatEther(price), "ETH");
 
 // Buy a Kami from the vendor
+const kamiIndex = Number(process.env.NEWBIE_VENDOR_KAMI_INDEX ?? 0);
 const tx = await vendorSystem.executeTyped(kamiIndex, { value: price });
 await tx.wait();
 console.log("First Kami purchased from the Newbie Vendor!");
 ```
+
+### Choosing `kamiIndex`
+
+1. Read the current 3 displayed indices from your indexer/front-end feed.
+2. Set `NEWBIE_VENDOR_KAMI_INDEX` to one of those indices.
+3. If the tx reverts with `NewbieVendor: kami not on display`, refresh display data and retry.
 
 > **Tip:** Use `calcPrice()` (a view function, no gas) to check the current vendor price before buying. Excess ETH is refunded automatically.
 
@@ -366,15 +375,23 @@ const RPC_URL = "https://jsonrpc-yominet-1.anvil.asia-southeast.initia.xyz";
 const WORLD_ADDRESS = "0x2729174c265dbBd8416C6449E0E813E88f43D0E7";
 
 const provider = new ethers.JsonRpcProvider(RPC_URL, {
-  chainId: 428962654539583n,
+  chainId: 428962654539583,
   name: "Yominet",
 });
 
+function mustEnv(name) {
+  const value = process.env[name];
+  if (!value || !value.startsWith("0x")) {
+    throw new Error(`Missing ${name}. Set it in your shell before running.`);
+  }
+  return value;
+}
+
 // Seller uses operator wallet to list
-const sellerOperator = new ethers.Wallet(process.env.SELLER_OPERATOR_KEY, provider);
+const sellerOperator = new ethers.Wallet(mustEnv("SELLER_OPERATOR_KEY"), provider);
 
 // Buyer uses owner wallet to buy (payable)
-const buyerOwner = new ethers.Wallet(process.env.BUYER_OWNER_KEY, provider);
+const buyerOwner = new ethers.Wallet(mustEnv("BUYER_OWNER_KEY"), provider);
 
 // Helper to resolve system contracts
 const world = new ethers.Contract(
@@ -418,15 +435,18 @@ async function main() {
     ["function executeTyped(uint32, uint256, uint256) returns (bytes)"],
     sellerOperator
   );
-  const listingRaw = await listSys.executeTyped.staticCall(42, price, 0);
-  const [listingId] = ethers.AbiCoder.defaultAbiCoder().decode(
-    ["uint256"],
-    listingRaw
-  );
-
   const listTx = await listSys.executeTyped(42, price, 0);
-  await listTx.wait();
-  console.log("✅ Kami #42 listed for 0.1 ETH");
+  const listReceipt = await listTx.wait();
+  console.log("✅ Kami #42 listed for 0.1 ETH. Tx:", listReceipt.hash);
+
+  // Listing IDs are non-deterministic.
+  // Resolve from confirmed indexer/event output keyed by listReceipt.hash.
+  // Then set LISTING_ID and rerun to execute the buy step.
+  if (!process.env.LISTING_ID) {
+    console.log("Set LISTING_ID from indexer/event output and rerun for buy.");
+    return;
+  }
+  const listingId = BigInt(process.env.LISTING_ID);
 
   // --- Buyer buys the listing ---
   const buySys = await sys(
@@ -443,6 +463,8 @@ async function main() {
 
 main().catch(console.error);
 ```
+
+> **Why `LISTING_ID` is externalized:** listing IDs come from `world.getUniqueEntityId()` and are non-deterministic. `staticCall` can drift from mined state under concurrency.
 
 ---
 

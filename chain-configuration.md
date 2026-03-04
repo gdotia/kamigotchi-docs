@@ -39,7 +39,7 @@ Kamigotchi is deployed on **Yominet**, an Initia L2 rollup built on the OP Stack
 import { ethers } from "ethers";
 
 const YOMINET = {
-  chainId: 428962654539583n,
+  chainId: 428962654539583,
   name: "Yominet",
 };
 
@@ -48,6 +48,8 @@ const provider = new ethers.JsonRpcProvider(
   YOMINET
 );
 ```
+
+> **Note:** In ethers v6, pass `chainId` as a JavaScript number in the network object (not a `BigInt`).
 
 ### Supported Wallets
 

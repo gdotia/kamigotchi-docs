@@ -2,16 +2,38 @@
 
 This guide walks third-party developers through integrating with Kamigotchi's on-chain systems. By the end, you'll be able to register accounts, manage Kamis, and interact with the full game API.
 
+If you want the shortest first-run path for a new bot developer, start with [Agent Bootstrap](agent-bootstrap.md) and return here for the full flow.
+
 ---
 
 ## Prerequisites
 
 | Requirement | Details |
 |-------------|---------|
-| **Runtime** | Node.js v18+ |
-| **Library** | ethers.js v6 (`npm install ethers`) |
+| **Runtime** | Node.js v18+ (v20+ recommended) |
+| **Library** | ethers.js v6 |
+| **Module Mode** | ESM (`"type": "module"` in `package.json`) |
+| **Environment** | `OWNER_PRIVATE_KEY` and `OPERATOR_PRIVATE_KEY` |
 | **Wallet** | An EOA with $ETH on Yominet for gas |
 | **Network** | Yominet (Chain ID: `428962654539583`) |
+
+---
+
+## Step 0: Create a Runnable Project
+
+```bash
+mkdir kamigotchi-agent
+cd kamigotchi-agent
+npm init -y
+npm install ethers
+npm pkg set type=module
+
+# Linux/macOS
+export OWNER_PRIVATE_KEY=0xYOUR_OWNER_PRIVATE_KEY
+export OPERATOR_PRIVATE_KEY=0xYOUR_OPERATOR_PRIVATE_KEY
+```
+
+> **Windows PowerShell:** use `$env:OWNER_PRIVATE_KEY="0x..."` and `$env:OPERATOR_PRIVATE_KEY="0x..."`.
 
 ---
 
@@ -22,7 +44,7 @@ import { ethers } from "ethers";
 
 // Network configuration
 const RPC_URL = "https://jsonrpc-yominet-1.anvil.asia-southeast.initia.xyz";
-const CHAIN = { chainId: 428962654539583n, name: "Yominet" };
+const CHAIN = { chainId: 428962654539583, name: "Yominet" };
 
 // Connect
 const provider = new ethers.JsonRpcProvider(RPC_URL, CHAIN);
@@ -32,6 +54,8 @@ const blockNumber = await provider.getBlockNumber();
 console.log("Connected to Yominet (block:", blockNumber + ")");
 ```
 
+> **Important:** In ethers v6, use a numeric `chainId` in the provider network object.
+
 ---
 
 ## Step 2: Set Up Wallets
@@ -39,12 +63,20 @@ console.log("Connected to Yominet (block:", blockNumber + ")");
 Kamigotchi uses a **dual-wallet model**. The official game client handles this via [Privy](https://privy.io) — players connect their external wallet (Owner), and Privy auto-creates an embedded wallet (Operator). For programmatic integrations, you manage both wallets directly:
 
 ```javascript
+function mustEnv(name) {
+  const value = process.env[name];
+  if (!value || !value.startsWith("0x")) {
+    throw new Error(`Missing ${name}. Set it before running this script.`);
+  }
+  return value;
+}
+
 // Owner wallet — holds NFTs, registers account, does privileged operations
-const ownerSigner = new ethers.Wallet(process.env.OWNER_PRIVATE_KEY, provider);
+const ownerSigner = new ethers.Wallet(mustEnv("OWNER_PRIVATE_KEY"), provider);
 
 // Operator wallet — handles routine gameplay transactions
 // (In the official client, this is Privy's embedded wallet)
-const operatorSigner = new ethers.Wallet(process.env.OPERATOR_PRIVATE_KEY, provider);
+const operatorSigner = new ethers.Wallet(mustEnv("OPERATOR_PRIVATE_KEY"), provider);
 
 console.log("Owner:", ownerSigner.address);
 console.log("Operator:", operatorSigner.address);
@@ -152,11 +184,13 @@ const price = await vendorSystem.calcPrice();
 console.log("Vendor price:", ethers.formatEther(price), "ETH");
 
 // Buy one of the 3 currently displayed Kamis
-const kamiIndex = 0; // 0/1/2 from the current vendor display
+const kamiIndex = Number(process.env.NEWBIE_VENDOR_KAMI_INDEX ?? 0);
 const tx = await vendorSystem.executeTyped(kamiIndex, { value: price });
 await tx.wait();
 console.log("First Kami purchased from the Newbie Vendor!");
 ```
+
+> **Selecting `kamiIndex`:** use one of the three indices currently shown by your UI/indexer feed. If you get `NewbieVendor: kami not on display`, refresh the current display and retry.
 
 > **Restrictions:** One purchase per account, only within 24 hours of registration. Minimum price 0.005 ETH. The purchased Kami is soulbound for 3 days (cannot be listed or unstaked). See [KamiSwap — Marketplace](player-api/marketplace.md) for full details.
 
@@ -183,22 +217,23 @@ const mintSystem = await getSystem("system.kami.gacha.mint", MINT_ABI, ownerSign
 
 const mintAmount = 1;
 
-// Preflight the return data with staticCall (same args as the tx)
-const encodedCommitIds = await mintSystem.executeTyped.staticCall(mintAmount, {
+// Preflight only: staticCall can drift from mined results if state changes.
+const encodedPreflightCommitIds = await mintSystem.executeTyped.staticCall(mintAmount, {
   gasLimit: 7_000_000,
 });
-const [commitIdArray] = ethers.AbiCoder.defaultAbiCoder().decode(
+const [preflightCommitIds] = ethers.AbiCoder.defaultAbiCoder().decode(
   ["uint256[]"],
-  encodedCommitIds
+  encodedPreflightCommitIds
 );
 
 const mintTx = await mintSystem.executeTyped(mintAmount, { gasLimit: 7_000_000 });
-await mintTx.wait();
+const mintReceipt = await mintTx.wait();
 console.log("Mint committed!");
 
-// For production bots: if reveal fails due commit mismatch, refresh commit IDs
-// from the indexer/events before retrying reveal.
-console.log("Commit IDs:", commitIdArray);
+// Production recommendation: resolve final commit IDs from indexer/events by tx hash.
+// const commitIdArray = await getCommitIdsFromIndexer(mintReceipt.hash);
+const commitIdArray = preflightCommitIds;
+console.log("Preflight Commit IDs:", commitIdArray, "Mint tx:", mintReceipt.hash);
 
 // 3. Reveal — determines the Kami's traits (species, stats, rarity)
 // Note: there may be a minimum block delay between mint and reveal
@@ -370,12 +405,20 @@ const WORLD_ADDRESS = "0x2729174c265dbBd8416C6449E0E813E88f43D0E7";
 
 // --- Setup ---
 const provider = new ethers.JsonRpcProvider(RPC_URL, {
-  chainId: 428962654539583n,
+  chainId: 428962654539583,
   name: "Yominet",
 });
 
-const ownerSigner = new ethers.Wallet(process.env.OWNER_PRIVATE_KEY, provider);
-const operatorSigner = new ethers.Wallet(process.env.OPERATOR_PRIVATE_KEY, provider);
+function mustEnv(name) {
+  const value = process.env[name];
+  if (!value || !value.startsWith("0x")) {
+    throw new Error(`Missing ${name}. Set it before running this script.`);
+  }
+  return value;
+}
+
+const ownerSigner = new ethers.Wallet(mustEnv("OWNER_PRIVATE_KEY"), provider);
+const operatorSigner = new ethers.Wallet(mustEnv("OPERATOR_PRIVATE_KEY"), provider);
 
 const world = new ethers.Contract(
   WORLD_ADDRESS,

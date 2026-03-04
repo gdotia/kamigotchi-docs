@@ -93,15 +93,19 @@ const mintSystem = await getSystem(
   ownerSigner
 );
 
-// Preflight return data with staticCall (same args as the tx)
-const encodedCommitIds = await mintSystem.executeTyped.staticCall(1);
-const [commitIds] = ethers.AbiCoder.defaultAbiCoder().decode(
+// Preflight only: staticCall can drift from mined state.
+const encodedPreflightCommitIds = await mintSystem.executeTyped.staticCall(1);
+const [preflightCommitIds] = ethers.AbiCoder.defaultAbiCoder().decode(
   ["uint256[]"],
-  encodedCommitIds
+  encodedPreflightCommitIds
 );
 
 const mintTx = await mintSystem.executeTyped(1);
 const mintReceipt = await mintTx.wait();
+
+// Production: resolve final commit IDs from confirmed tx events/indexer.
+// const commitIds = await getCommitIdsFromIndexer(mintReceipt.hash);
+const commitIds = preflightCommitIds;
 
 // Step 2: Reveal (must wait ~1 block for randomness)
 const revealSystem = await getSystem(
@@ -115,7 +119,7 @@ const revealReceipt = await revealTx.wait();
 // The return value contains the Kami entity IDs
 ```
 
-> **Note:** `staticCall` is a preflight simulation and can drift if state changes between simulation and tx inclusion. For production bots, treat events/indexer data as the source of truth for commit IDs.
+> **Note:** `staticCall` is preflight only and can drift if state changes between simulation and tx inclusion. For production bots, treat confirmed tx events/indexer data as the source of truth for commit IDs.
 
 ### After Staking a Kami721 NFT
 

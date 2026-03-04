@@ -2,16 +2,22 @@
 
 The Kamigotchi Player API is a set of on-chain **System contracts** that handle all game actions. This page covers how to set up your environment and call any system.
 
+If you are starting from zero, run through [Agent Bootstrap](../agent-bootstrap.md) first, then come back here.
+
 ---
 
 ## Prerequisites
 
 - **Node.js** v18+ and **ethers.js v6**
+- **ESM mode** enabled (`"type": "module"` in `package.json`)
+- **Environment variables** set for `OWNER_PRIVATE_KEY` and `OPERATOR_PRIVATE_KEY`
 - A wallet with $ETH on Yominet for gas (see [Chain Configuration](../chain-configuration.md))
 - The World contract address
 
 ```bash
+npm init -y
 npm install ethers
+npm pkg set type=module
 ```
 
 ---
@@ -27,15 +33,23 @@ const WORLD_ADDRESS = "0x2729174c265dbBd8416C6449E0E813E88f43D0E7";
 
 // --- Provider & Signer ---
 const provider = new ethers.JsonRpcProvider(RPC_URL, {
-  chainId: 428962654539583n,
+  chainId: 428962654539583,
   name: "Yominet",
 });
 
+function mustEnv(name) {
+  const value = process.env[name];
+  if (!value || !value.startsWith("0x")) {
+    throw new Error(`Missing ${name}. Set it in your shell before running.`);
+  }
+  return value;
+}
+
 // Operator wallet for regular gameplay
-const operatorSigner = new ethers.Wallet("YOUR_OPERATOR_PRIVATE_KEY", provider);
+const operatorSigner = new ethers.Wallet(mustEnv("OPERATOR_PRIVATE_KEY"), provider);
 
 // Owner wallet for privileged actions (register, NFTs, ONYX)
-const ownerSigner = new ethers.Wallet("YOUR_OWNER_PRIVATE_KEY", provider);
+const ownerSigner = new ethers.Wallet(mustEnv("OWNER_PRIVATE_KEY"), provider);
 
 // --- World Contract ---
 const WORLD_ABI = [
@@ -77,6 +91,8 @@ async function getSystem(systemId, abi, signer) {
 }
 ```
 
+> **Important:** In ethers v6, pass `chainId` as a number (not `BigInt`) in the provider network object.
+
 ---
 
 ## Wallet Model
@@ -92,7 +108,7 @@ Kamigotchi uses two wallets per player:
 
 ### New Player Path
 
-After registering, new players need to acquire their first Kami before they can participate in gameplay. The primary path is **gacha minting**: buy a gacha ticket → mint → reveal. Alternatives include buying from the Newbie Vendor, trading with other players, or receiving a Kami721 NFT and staking it. See the [Integration Guide](../integration-guide.md#step-5-get-your-first-kami) for the full walkthrough.
+After registering, new players need to acquire their first Kami before they can participate in gameplay. The recommended first path is **Newbie Vendor** (one transaction, no reveal). Gacha is the main alternative path after funding in-game ETH (item 103). See the [Integration Guide](../integration-guide.md#step-5-get-your-first-kami) for the full walkthrough.
 
 ### Determining Which Wallet to Use
 
@@ -276,7 +292,7 @@ export const RPC_URL = "https://jsonrpc-yominet-1.anvil.asia-southeast.initia.xy
 export const WORLD_ADDRESS = "0x2729174c265dbBd8416C6449E0E813E88f43D0E7";
 
 export const provider = new ethers.JsonRpcProvider(RPC_URL, {
-  chainId: 428962654539583n,
+  chainId: 428962654539583,
   name: "Yominet",
 });
 

@@ -132,8 +132,16 @@ The embedded wallet acts as a session key: it signs routine gameplay transaction
 For API integrations and bots, you can bypass Privy and use two private keys directly:
 
 ```javascript
-const ownerSigner = new ethers.Wallet(process.env.OWNER_PRIVATE_KEY, provider);
-const operatorSigner = new ethers.Wallet(process.env.OPERATOR_PRIVATE_KEY, provider);
+function mustEnv(name) {
+  const value = process.env[name];
+  if (!value || !value.startsWith("0x")) {
+    throw new Error(`Missing ${name}. Set it before running this script.`);
+  }
+  return value;
+}
+
+const ownerSigner = new ethers.Wallet(mustEnv("OWNER_PRIVATE_KEY"), provider);
+const operatorSigner = new ethers.Wallet(mustEnv("OPERATOR_PRIVATE_KEY"), provider);
 
 // Register: pass the operator address during account creation
 const registerSystem = await getSystem("system.account.register", registerABI, ownerSigner);

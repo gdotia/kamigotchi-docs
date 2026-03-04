@@ -12,6 +12,7 @@ This documentation covers the smart contract architecture, chain configuration, 
 - [Architecture Overview](architecture.md) — MUD ECS design, World contract, Systems, Components, and Entities
 - [Chain Configuration](chain-configuration.md) — Yominet network details, RPC, gas, wallets, and bridging
 - [Integration Guide](integration-guide.md) — Step-by-step setup for third-party developers
+- [Agent Bootstrap](agent-bootstrap.md) — Copy-paste setup path for a first-time agent/bot script
 
 ### Contracts
 
