@@ -1,7 +1,6 @@
 # Kamigotchi Technical Documentation
 
-Welcome to the **Kamigotchi** developer documentation. Kamigotchi is a fully on-chain pet-raising game built on the [MUD Entity Component System](https://mud.dev/) framework, deployed on **Yominet** — an Initia L2 rollup powered by OP Stack and Celestia DA.
-
+Welcome to the **Kamigotchi** developer documentation. Kamigotchi is a fully on-chain pet-raising game built on the [MUD Entity Component System](https://mud.dev/) framework, deployed on **Yominet** — an Initia L2 rollup
 This documentation covers the smart contract architecture, chain configuration, and the complete Player API for integrating with Kamigotchi.
 
 ---
