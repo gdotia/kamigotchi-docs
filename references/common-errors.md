@@ -41,7 +41,9 @@ Quick reference for common Solidity revert messages across Kamigotchi systems. T
 
 ---
 
-## Gacha Ticket Purchase (`system.buy.gacha.ticket`)
+## Gacha Ticket Purchase (`system.buy.gacha.ticket` — Deprecated)
+
+> **Note:** The `buyPublic()` / `buyWL()` ticket sale system is no longer active. Gacha tickets are now purchased via `system.auction.buy` (Dutch auction, paid in $MUSU). The errors below are from the legacy system.
 
 | Revert Message | Cause |
 |----------------|-------|

@@ -108,7 +108,7 @@ Kamigotchi uses two wallets per player:
 
 ### New Player Path
 
-After registering, new players need to acquire their first Kami before they can participate in gameplay. The recommended first path is **Newbie Vendor** (one transaction, no reveal). Gacha is the main alternative path after funding in-game ETH (item 103). See the [Integration Guide](../integration-guide.md#step-5-get-your-first-kami) for the full walkthrough.
+After registering, new players need to acquire their first Kami before they can participate in gameplay. The recommended first path is **Newbie Vendor** (one transaction, no reveal). Gacha is the main alternative path — buy tickets with $MUSU via the auction system. See the [Integration Guide](../integration-guide.md#step-5-get-your-first-kami) for the full walkthrough.
 
 ### Determining Which Wallet to Use
 
@@ -143,18 +143,10 @@ Certain systems use an **in-game ETH balance** (tracked as item index `103`) rat
 
 | System | Usage |
 |--------|-------|
-| `system.buy.gacha.ticket` | Buy gacha tickets — debits from in-game ETH balance (NOT `msg.value`) |
+| `system.auction.buy` | Buy gacha tickets via Dutch auction — debits $MUSU from inventory |
 | `system.kamimarket.offer` | WETH offer amount — requires WETH approval to KamiMarketVault |
 
-To fund your in-game ETH balance, deposit WETH via the ERC20 portal:
-
-```javascript
-// 1. Approve WETH spend to the World contract
-// 2. Deposit WETH as item 103
-await portalSystem.deposit(103, depositAmount);
-```
-
-> **Key distinction:** If a system is `payable`, you send native ETH. If it deducts from inventory item 103, you must deposit WETH via the ERC20 portal first. Check each system's documentation for which method it uses.
+> **Key distinction:** If a system is `payable`, you send native ETH with `msg.value`. If it deducts from inventory (e.g., $MUSU for gacha tickets), you need the item in your in-game inventory. Check each system's documentation for which payment method it uses.
 
 ---
 

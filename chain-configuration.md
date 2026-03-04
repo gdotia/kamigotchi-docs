@@ -93,7 +93,7 @@ This is the simplest option if you already have the Kamigotchi client running.
 For a new bot developer, bridge **0.2-0.5 ETH**. Gas is extremely cheap (~0.001 ETH for thousands of transactions). The main ETH costs are:
 
 - **Newbie Vendor purchases** — 0.005+ ETH per item (paid in native ETH via `msg.value`)
-- **Gacha tickets** — 0.1 ETH each (requires WETH deposit to portal; see WETH section below)
+- **Gacha tickets** — purchased with $MUSU via Dutch auction (see [Gacha / Minting](player-api/minting.md))
 
 ---
 
@@ -120,7 +120,7 @@ Yominet has several distinct currency types. Understanding the differences is cr
 |----------|------|---------------|----------|
 | **Native ETH** | Gas token | Wallet balance | Gas fees, marketplace listing buys (`msg.value`), Newbie Vendor purchases (`msg.value`) |
 | **WETH** | ERC-20 | Contract `0xE1Ff...2546` | Marketplace offers (approval-based), depositing into game as in-game ETH (item 103) via portal |
-| **In-game ETH** | Inventory item | In-game (item 103) | Gacha tickets, other in-game ETH-denominated actions |
+| **In-game ETH** | Inventory item | In-game (item 103) | In-game ETH-denominated actions |
 | **$MUSU** | Inventory item | In-game (item 1) | Merchant purchases, trade fees, NPC gifts, quest costs |
 | **$ONYX** | ERC-20 | Contract `0x4BaD...7CF4` | Revive, rename (disabled), respec (disabled) |
 
@@ -134,7 +134,7 @@ Yominet has several distinct currency types. Understanding the differences is cr
 |-------|-----------------|
 | **Wrapped ETH (WETH)** | [`0xE1Ff7038eAAAF027031688E1535a055B2Bac2546`](https://scan.initia.xyz/yominet-1/address/0xE1Ff7038eAAAF027031688E1535a055B2Bac2546) |
 
-WETH is needed for marketplace offers (which use ERC-20 approvals) and for depositing ETH into the game as in-game ETH (item 103) via the portal.
+WETH is needed for marketplace offers (which use ERC-20 approvals).
 
 ### Wrapping and Unwrapping ETH
 

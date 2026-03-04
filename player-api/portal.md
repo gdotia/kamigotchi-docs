@@ -404,31 +404,31 @@ console.log("ONYX deposited into game world!");
 ```
 
 ```javascript
-// Funding gacha: deposit in-game ETH balance (item 103) via WETH
+// Depositing ONYX into the game
 import { ethers } from "ethers";
 import { getSystem, ownerSigner } from "./kamigotchi.js";
 
-const WETH_ADDRESS = "0xE1Ff7038eAAAF027031688E1535a055B2Bac2546";
+const ONYX_ADDRESS = "0x4BaDFb501Ab304fF11217C44702bb9E9732E7CF4";
 const WORLD_ADDRESS = "0x2729174c265dbBd8416C6449E0E813E88f43D0E7";
-const wethItemIndex = 103;
-const gachaBudget = ethers.parseEther("0.2");
+const onyxItemIndex = 100;
+const depositAmt = ethers.parseUnits("100", 18);
 const portalAbi = ["function deposit(uint32 itemIndex, uint256 itemAmt)"];
 const portalSystem = await getSystem("system.erc20.portal", portalAbi, ownerSigner);
 
-const weth = new ethers.Contract(
-  WETH_ADDRESS,
+const onyx = new ethers.Contract(
+  ONYX_ADDRESS,
   ["function approve(address spender, uint256 amount) returns (bool)"],
   ownerSigner
 );
-await (await weth.approve(WORLD_ADDRESS, gachaBudget)).wait();
-await (await portalSystem.deposit(wethItemIndex, gachaBudget)).wait();
-console.log("In-game ETH (item 103) funded for gacha tickets");
+await (await onyx.approve(WORLD_ADDRESS, depositAmt)).wait();
+await (await portalSystem.deposit(onyxItemIndex, depositAmt)).wait();
+console.log("ONYX deposited into game world");
 ```
 
 #### Notes
 
 - The `itemIndex` maps an in-game item to a specific ERC-20 contract. The mapping is stored in the `TokenPortalSystem` contract's local storage (`itemAddrs` and `itemScales` mappings), initialized from the item registry. Items must be of type `"ERC20"`. The primary token is ONYX (item index 100). The conversion scale and token address are set per item via `setItem()` or `initItem()` admin calls. Set via registry — query the `TokenPortalSystem` contract for current item→ERC-20 mappings.
-- `itemIndex = 100` is ONYX, while `itemIndex = 103` is the in-game ETH balance used by gacha tickets.
+- `itemIndex = 100` is ONYX, while `itemIndex = 103` is the in-game ETH balance.
 - Requires ERC-20 `approve()` before depositing.
 - Prefer approving the exact deposit amount (or a tight cap) instead of unlimited allowances.
 

@@ -46,7 +46,7 @@ console.log("Mint committed! Use reveal() to reveal your Kamis.");
 
 - **Maximum 5 Kamis per mint transaction** — the contract enforces `require(amount <= 5)`. For larger mints, split across multiple transactions.
 - **Gas scales with mint amount**: base 4M + 3M per Kami.
-- Requires sufficient gacha tickets — buy with `buyPublic()` or `buyWL()`.
+- Requires sufficient gacha tickets — buy via the auction system (see [Buy Gacha Tickets](#buy-gacha-tickets) below).
 - Returns commit IDs needed for `reveal()`.
 
 ---
@@ -141,115 +141,47 @@ console.log("Kamis rerolled!");
 
 ## Buy Gacha Tickets
 
-### Gacha Funding Checklist
+Gacha tickets are purchased via the **auction system** (`system.auction.buy`) using a **Gradual Dutch Auction (GDA)** pricing model. Tickets cost **$MUSU** (item index 1).
 
-Before buying tickets, you must have in-game ETH (item 103). Follow these steps:
+> **Important:** You must be on the **vending machine tile** (the auction room) to buy gacha tickets. Move there first with [account.move()](account.md#move).
 
-1. **Bridge ETH to Yominet** — use the Kamigotchi client bridge or gas.zip
-2. **Wrap native ETH to WETH** — call `WETH.deposit()` on `0xE1Ff7038eAAAF027031688E1535a055B2Bac2546`
-3. **Approve WETH** — call `WETH.approve(WORLD_ADDRESS, amount)`
-4. **Deposit WETH as in-game ETH** — call `system.erc20.portal.deposit(103, amount)` — see [Portal](portal.md)
-5. **Buy tickets** — call `buyPublic(amount)` on `system.buy.gacha.ticket`
+> **History:** The original `buyPublic()` / `buyWL()` functions on `system.buy.gacha.ticket` were used during the initial launch period and are no longer active. All ticket purchases now go through the auction system.
 
-Budget: **0.1 ETH per public ticket**.
+### How It Works
 
-### Prerequisites
-
-> **⚠️ This system does NOT accept native ETH.** You must first deposit ETH into the game via `system.erc20.portal` (see [Portal](portal.md)). Tickets are paid from your **in-game ETH balance** (item index 103).
->
-> If you haven't deposited ETH yet, your `buyPublic()` / `buyWL()` calls will revert with an insufficient balance error.
-
-> **⚠️ This system does not support the generic `execute(bytes)` entry point.** Calling `GachaBuyTicketSystem.execute(bytes)` will always revert with `"not implemented"`. Use `buyPublic()` or `buyWL()` directly.
-
----
-
-## Buy Gacha Tickets (Public)
-
-Buy gacha tickets (public sale).
-
-| Property | Value |
-|----------|-------|
-| **System ID** | `system.buy.gacha.ticket` |
-| **Wallet** | 🔐 Owner |
-| **Gas** | Default |
-
-### Parameters
-
-| Name | Type | Description |
-|------|------|-------------|
-| `amount` | `uint256` | Number of tickets to buy |
-
-### Description
-
-Purchases gacha tickets from the public sale. Tickets are required for minting. Cost is paid in ETH (item index 103) — production price is 100 mETH (0.1 ETH) per ticket, configured via `MINT_PRICE_PUBLIC`.
+The auction uses GDA pricing — the price starts high and decays over time until purchased. Each ticket purchase resets the price curve. This creates a fair market-driven pricing mechanism.
 
 ### Code Example
 
 ```javascript
 import { getSystem, ownerSigner, operatorSigner } from "./kamigotchi.js";
 
-// buyPublic() is a named function, NOT executeTyped
-const ABI = ["function buyPublic(uint256 amount)"];
-const system = await getSystem("system.buy.gacha.ticket", ABI, ownerSigner);
+// Gacha tickets are bought via the auction system, paid in $MUSU
+const ABI = [
+  "function executeTyped(uint32 itemIndex, uint32 amt) returns (bytes)",
+];
+const system = await getSystem("system.auction.buy", ABI, ownerSigner);
 
-const tx = await system.buyPublic(5); // Buy 5 tickets
+// Buy 1 gacha ticket (item index 10) — price is determined by the GDA curve
+const tx = await system.executeTyped(10, 1); // itemIndex 10 = Gacha Ticket
 await tx.wait();
-console.log("Gacha tickets purchased!");
+console.log("Gacha ticket purchased via auction!");
 ```
 
 ### Notes
 
-- Public ticket price: 100 mETH (0.1 ETH) per ticket, paid from in-game ETH balance (item index 103). Max per account: 222 (configured via `MINT_MAX_PUBLIC`). Global cap: 3,000 total mints (`MINT_MAX_TOTAL`).
-- **Requires deposited ETH** — deposit via `system.erc20.portal` first (see [Portal](portal.md)).
-
----
-
-## Buy Gacha Tickets (Whitelist)
-
-Buy gacha tickets (whitelist sale).
-
-| Property | Value |
-|----------|-------|
-| **System ID** | `system.buy.gacha.ticket` |
-| **Wallet** | 🔐 Owner |
-| **Gas** | Default |
-
-### Parameters
-
-| Name | Type | Description |
-|------|------|-------------|
-| *(none)* | — | No additional parameters — whitelist status is checked via an on-chain `MINT_WHITELISTED` flag on the account |
-
-### Description
-
-Purchases gacha tickets during a whitelist/presale phase. Only eligible wallets can call this function. May offer discounted pricing or guaranteed allocation.
-
-### Code Example
-
-```javascript
-import { getSystem, ownerSigner, operatorSigner } from "./kamigotchi.js";
-
-// buyWL() is a named function with no parameters
-const ABI = ["function buyWL() external"];
-const system = await getSystem("system.buy.gacha.ticket", ABI, ownerSigner);
-
-const tx = await system.buyWL();
-await tx.wait();
-console.log("Whitelist gacha tickets purchased!");
-```
-
-### Notes
-
-- Whitelist is flag-based: admins set a `MINT_WHITELISTED` flag on eligible accounts. No Merkle proof or signature needed — the contract checks the flag directly. Price: 50 mETH (0.05 ETH) per ticket (`MINT_PRICE_WL`). Max 1 whitelist mint per account (`MINT_MAX_WL`).
-- Whitelist sales typically have limited availability windows.
+- **Payment currency:** $MUSU (item index 1) — earn via harvesting, quests, merchant sales, or player trading.
+- **Pricing:** Gradual Dutch Auction — price decays over time, resets on each purchase. Query on-chain for current price.
+- **Location requirement:** Must be on the vending machine tile to purchase.
+- See [Merchant Listings — auction.buy()](listings.md#auctionbuy) for full auction system details.
 
 ---
 
 ## Minting Lifecycle
 
 ```
-  buyPublic()                       mint(amount)
-  buyWL()                                │
+  auction.buy()                     mint(amount)
+  (pay $MUSU via GDA)                    │
          │                               ▼
          ▼                         Commit IDs generated
   Gacha Tickets ──── mint() ──────▶      │

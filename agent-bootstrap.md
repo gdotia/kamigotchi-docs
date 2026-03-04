@@ -33,7 +33,7 @@ Fund **both** your Owner and Operator wallets with ETH for gas.
 
 **Recommended amounts:**
 - 0.01 ETH per wallet for gas
-- Additional budget for Kami acquisition: 0.005+ ETH for the Newbie Vendor, or 0.1+ ETH for gacha minting
+- Additional budget for Kami acquisition: 0.005+ ETH for the Newbie Vendor, or $MUSU for gacha tickets (purchased via auction)
 
 If you need to generate fresh wallets:
 

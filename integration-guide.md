@@ -34,7 +34,7 @@ Two options:
 |--------|------|----------|
 | Gas (thousands of txs) | ~0.001 ETH | Native ETH |
 | Newbie Vendor (first Kami) | 0.005-0.05 ETH | Native ETH (msg.value) |
-| Gacha ticket (public) | 0.1 ETH each | In-game ETH (item 103, deposited via Portal) |
+| Gacha ticket (public) | $MUSU (GDA pricing) | In-game $MUSU (item 1, earned via harvesting) |
 | Marketplace listing | Variable | Native ETH (msg.value) |
 | Marketplace offer | Variable | WETH (approval-based) |
 
@@ -246,19 +246,16 @@ console.log("First Kami purchased from the Newbie Vendor!");
 
 ### Option B: Gacha Minting
 
-The standard gacha flow is: **deposit ETH → buy a gacha ticket → mint → reveal**.
+The standard gacha flow is: **earn $MUSU → buy a gacha ticket via auction → mint → reveal**.
 
-> **Important:** Gacha tickets are paid from your **in-game ETH balance** (item index 103), NOT native ETH. You must first deposit ETH via `system.erc20.portal` — see [Portal](player-api/portal.md).
+> **Important:** Gacha tickets are purchased with **$MUSU** (item index 1) via the auction system (`system.auction.buy`) using Gradual Dutch Auction pricing. You must be on the vending machine tile.
 
 ```javascript
-// 0. Deposit ETH into the game first (see Portal docs for full example)
-// await portalSystem.deposit(103, ethers.parseEther("0.1"));
+// 1. Buy a gacha ticket via auction (costs $MUSU — GDA pricing)
+const BUY_ABI = ["function executeTyped(uint32 itemIndex, uint32 amt) returns (bytes)"];
+const buySystem = await getSystem("system.auction.buy", BUY_ABI, ownerSigner);
 
-// 1. Buy a gacha ticket (costs in-game ETH — see minting docs for current price)
-const BUY_ABI = ["function buyPublic(uint256 amount)"];
-const buySystem = await getSystem("system.buy.gacha.ticket", BUY_ABI, ownerSigner);
-
-await (await buySystem.buyPublic(1)).wait();
+await (await buySystem.executeTyped(10, 1)).wait(); // item 10 = Gacha Ticket
 console.log("Gacha ticket purchased!");
 
 // 2. Mint — commits the randomness (consumes the ticket)
@@ -309,7 +306,7 @@ await revealTx.wait();
 console.log("Kami revealed!");
 ```
 
-> **Pricing:** Public tickets cost 0.1 ETH each (`MINT_PRICE_PUBLIC`). Whitelist tickets cost 0.05 ETH (`MINT_PRICE_WL`). Max 222 public mints per account, 3,000 total globally. See [Gacha / Minting](player-api/minting.md) for full details.
+> **Pricing:** Gacha tickets are purchased with $MUSU via a Gradual Dutch Auction (GDA) on the vending machine tile. Price decays over time and resets on each purchase. See [Gacha / Minting](player-api/minting.md) for full details.
 
 ### Option C: Buy from the Marketplace or Trade
 

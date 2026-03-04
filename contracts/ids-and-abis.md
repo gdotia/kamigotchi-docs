@@ -113,7 +113,7 @@ Kamigotchi has **67 documented player-facing systems** in the World contract. Ea
 | `system.kami.gacha.mint` | Mint Kami with gacha ticket | Owner | [Minting](../player-api/minting.md) |
 | `system.kami.gacha.reveal` | Reveal minted Kami | N/A | [Minting](../player-api/minting.md) |
 | `system.kami.gacha.reroll` | Reroll Kami | Owner | [Minting](../player-api/minting.md) |
-| `system.buy.gacha.ticket` | Buy gacha tickets | Owner | [Minting](../player-api/minting.md) |
+| `system.buy.gacha.ticket` | Buy gacha tickets (deprecated — use `system.auction.buy` instead) | Owner | [Minting](../player-api/minting.md) |
 
 ### Getter / View Systems
 
@@ -247,7 +247,7 @@ Most systems use `executeTyped(...)` as their typed entry point. However, some s
 |--------|-------------|-----------|
 | `system.kami.gacha.reveal` | `reveal` | `reveal(uint256[] rawCommitIDs) returns (uint256[])` |
 | `system.kami.gacha.reroll` | `reroll` | `reroll(uint256[] kamiIDs) returns (uint256[])` |
-| `system.buy.gacha.ticket` | `buyPublic` / `buyWL` | `buyPublic(uint256 amount)` / `buyWL()` |
+| `system.buy.gacha.ticket` | `buyPublic` / `buyWL` (deprecated) | `buyPublic(uint256 amount)` / `buyWL()` — **no longer active; use `system.auction.buy` for gacha tickets** |
 | `system.erc20.portal` | `deposit` / `withdraw` / `claim` / `cancel` | `deposit(uint32, uint256)` / `withdraw(uint32, uint256) returns (uint256)` / `claim(uint256)` / `cancel(uint256)` |
 | `system.kami721.transfer` | `batchTransfer` / `batchTransferToMany` | `batchTransfer(uint256[], address)` / `batchTransferToMany(uint256[], address[])` |
 | `system.getter` | `getKami` / `getAccount` / `getKamiByIndex` | View functions — see [Getter System](#getter-system) below |
