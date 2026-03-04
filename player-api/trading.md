@@ -235,6 +235,36 @@ Trades incur MUSU fees at multiple stages:
 
 ---
 
+## Discovering Trades
+
+Trade entity IDs are **non-deterministic** — they are assigned by `world.getUniqueEntityId()` at creation time and cannot be derived from known inputs.
+
+### For Trade Creators (Makers)
+
+Capture the trade ID from the creation transaction receipt:
+
+```javascript
+import { extractEntityIds } from "./event-helpers.js";
+
+const tradeTx = await tradeSystem.executeTyped(buyIdx, buyAmt, sellIdx, sellAmt, 0);
+const tradeReceipt = await tradeTx.wait();
+const tradeId = extractEntityIds(tradeReceipt)[0];
+console.log("Trade entity ID:", tradeId);
+// Store this ID — you'll need it to complete or cancel the trade
+```
+
+### For Trade Takers
+
+There is currently no on-chain function to enumerate open trades. To discover trades available to execute:
+
+1. **Parse events** — Monitor `Store_SetRecord` events for new trade entity creation. See [Parsing Transaction Events](entity-discovery.md#parsing-transaction-events).
+2. **Use an indexer** — Query an off-chain indexer for open trades (if available).
+3. **Direct sharing** — The maker shares the trade ID out-of-band (e.g., via chat).
+
+> **Note:** For targeted trades (`targetID != 0`), only the specified account can execute. For open trades (`targetID = 0`), anyone can take them.
+
+---
+
 ## Related Pages
 
 - [Items & Crafting](items-and-crafting.md) — Item management

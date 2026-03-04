@@ -328,6 +328,96 @@ struct AccountShape {
 
 ---
 
+## Reading On-Chain Components
+
+Components store entity data in the MUD ECS model. You resolve component addresses the same way as systems — hash the component name and query the World registry.
+
+### Resolving Component Addresses
+
+```javascript
+// Components use the same resolution pattern as systems.
+// Hash the component name → query the World for its address.
+async function getComponentAddress(componentName) {
+  const hash = ethers.keccak256(ethers.toUtf8Bytes(componentName));
+  const systemsComponent = await getSystemsComponent();
+  const entities = await systemsComponent.getEntitiesWithValue(hash);
+  if (entities.length === 0) throw new Error(`Component not found: ${componentName}`);
+  return ethers.getAddress(ethers.toBeHex(entities[0], 20));
+}
+```
+
+### Key Components for Bot Development
+
+| Component Name | ABI | Use Case |
+|---------------|-----|----------|
+| `component.Value` | `getValue(uint256) view returns (uint256)` | Read inventory balances, stat values |
+| `component.IDOwnsKami` | `getEntitiesWithValue(uint256) view returns (uint256[])` | List all Kamis owned by an account |
+| `component.IDOwnsInventory` | `getEntitiesWithValue(uint256) view returns (uint256[])` | List all inventory entries for a holder |
+| `component.IndexItem` | `getValue(uint256) view returns (uint32)` | Read item index from an inventory/equipment entity |
+| `component.Config` | `getValue(uint256) view returns (uint256)` | Read config values (vault address, fee rates, etc.) |
+
+### Reading Inventory Balance
+
+```javascript
+// Check how many of a specific item you hold
+const VALUE_ABI = ["function getValue(uint256 entity) view returns (uint256)"];
+const valueAddr = await getComponentAddress("component.Value");
+const valueComponent = new ethers.Contract(valueAddr, VALUE_ABI, provider);
+
+// Compute the inventory entity ID (see Entity Discovery)
+const accountId = BigInt(ownerAddress);
+const musuInventoryId = BigInt(
+  ethers.keccak256(
+    ethers.solidityPacked(
+      ["string", "uint256", "uint32"],
+      ["inventory.instance", accountId, 1] // item index 1 = MUSU
+    )
+  )
+);
+
+const balance = await valueComponent.getValue(musuInventoryId);
+console.log("MUSU balance:", balance.toString());
+```
+
+### Enumerating Owned Kamis
+
+```javascript
+// List all Kamis owned by your account
+const OWNS_KAMI_ABI = ["function getEntitiesWithValue(uint256) view returns (uint256[])"];
+const ownsKamiAddr = await getComponentAddress("component.IDOwnsKami");
+const ownsKami = new ethers.Contract(ownsKamiAddr, OWNS_KAMI_ABI, provider);
+
+const accountId = BigInt(ownerAddress);
+const kamiEntityIds = await ownsKami.getEntitiesWithValue(accountId);
+console.log("Owned Kamis:", kamiEntityIds.length);
+
+// Get details for each Kami
+const getter = new ethers.Contract(getterSystemAddr, GETTER_ABI, provider);
+for (const kamiId of kamiEntityIds) {
+  const data = await getter.getKami(kamiId);
+  console.log(`Kami #${data.index}: ${data.name} (${data.state})`);
+}
+```
+
+### Reading Config Values
+
+```javascript
+// Read the KamiMarketVault address from ConfigComponent
+const CONFIG_ABI = ["function getValue(uint256 entity) view returns (uint256)"];
+const configAddr = await getComponentAddress("component.Config");
+const configComponent = new ethers.Contract(configAddr, CONFIG_ABI, provider);
+
+// Config keys are hashed the same way as system IDs
+const vaultKey = ethers.keccak256(ethers.toUtf8Bytes("KAMI_MARKET_VAULT"));
+const vaultRaw = await configComponent.getValue(vaultKey);
+const vaultAddress = ethers.getAddress(ethers.toBeHex(vaultRaw, 20));
+console.log("KamiMarketVault:", vaultAddress);
+```
+
+> **Note:** Component names follow the pattern `component.{Name}`. The ABI for most components includes `getValue(uint256)` for single-entity reads and `getEntitiesWithValue(uint256)` for reverse lookups (finding all entities with a given value).
+
+---
+
 ## Related Pages
 
 - [Live Addresses](live-addresses.md) — Core contract addresses

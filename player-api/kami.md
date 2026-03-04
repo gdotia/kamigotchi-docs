@@ -455,9 +455,9 @@ Revive a dead Kami using $ONYX.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `kamiIndex` | `uint256` | Index of the dead Kami in account's Kami list |
+| `kamiIndex` | `uint256` | ERC721 token index of the dead Kami (e.g., `42`) |
 
-> **Note:** Pass the Kami's ERC721 token index (e.g., 42) as a uint256. Despite the uint256 type, this is the token index, not an entity ID. The contract decodes it as a uint32 internally.
+> **Note:** Pass the Kami's **ERC721 token index** (e.g., `42`) as a `uint256`. This is the same token index used in `getKamiByIndex()`, NOT a positional index in any list. The contract decodes it as a `uint32` internally.
 
 ### Description
 

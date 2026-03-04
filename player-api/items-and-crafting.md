@@ -220,7 +220,7 @@ console.log("Droptable items revealed!");
 ### Notes
 
 - Batch reveals are more gas-efficient.
-- The droptable IDs come from events emitted by harvest, quest, or sacrifice systems.
+- The droptable IDs come from `Store_SetRecord` events emitted during harvest collection, quest completion, or sacrifice reveal. Parse the transaction receipt to extract them — see [Parsing Transaction Events](entity-discovery.md#parsing-transaction-events).
 - Revealing uses on-chain randomness — items are determined at reveal time.
 
 ---

@@ -90,7 +90,12 @@ console.log("Kamis revealed!");
 
 ### Notes
 
-- **Wait at least 1 block between `mint()` and `reveal()`** for randomness security.
+- **Wait at least 1 block between `mint()` and `reveal()`** for randomness security. On Yominet (~1 second block times), waiting 2 seconds is sufficient:
+  ```javascript
+  await mintTx.wait();
+  await new Promise((r) => setTimeout(r, 2000)); // Wait for next block
+  await revealSystem.reveal(commitIds);
+  ```
 - Batch reveals are more gas-efficient.
 - After revealing, use [echo.kamis()](echo.md) if the UI doesn't update.
 
@@ -171,7 +176,15 @@ console.log("Gacha ticket purchased via auction!");
 ### Notes
 
 - **Payment currency:** $MUSU (item index 1) — earn via harvesting, quests, merchant sales, or player trading.
-- **Pricing:** Gradual Dutch Auction — price decays over time, resets on each purchase. Query on-chain for current price.
+- **Pricing:** Gradual Dutch Auction — price decays over time, resets on each purchase. To check the current price, use `staticCall` — the transaction will consume MUSU equal to the current price:
+  ```javascript
+  try {
+    await system.executeTyped.staticCall(10, 1); // Simulate buying 1 ticket
+    console.log("You can afford a ticket at current price");
+  } catch (e) {
+    console.log("Cannot afford ticket or auction not active");
+  }
+  ```
 - **Location requirement:** Must be on the vending machine tile to purchase.
 - See [Merchant Listings — auction.buy()](listings.md#auctionbuy) for full auction system details.
 

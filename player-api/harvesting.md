@@ -363,6 +363,7 @@ Intensity increases the longer a Kami stays on a node. It resets when a harvest 
 - Calling `harvest.collect()` syncs the bounty (snapshots the accrued amount), resets the duration timer, and adds the bounty to the account's inventory.
 - The Kami's **Health decreases** over time while harvesting (strain). If health reaches zero, the Kami is liquidated. Monitor health and collect/stop before it gets critical.
 - Calling `harvest.stop()` automatically collects any remaining bounty before stopping.
+- **Block time:** Yominet has ~1 second block times, so duration-based calculations update approximately once per second.
 
 ### Harvest Node Data
 
@@ -380,11 +381,67 @@ See the [Harvest Nodes table](../references/game-data.md#harvest-nodes) for per-
 | Bounty boost | Skills/Equipment | Percentage multiplier on total output |
 | Strain | Health/Harmony | Higher Harmony/skills → slower health drain |
 
+> **Stamina:** Each room move costs stamina. Current stamina is readable via `getAccount(accountId).currStamina`. Stamina regenerates over time (rate configured on-chain via `ACCOUNT_STAMINA` config). Plan your movements to avoid running out.
+
 ---
 
 ## Feeding During Harvest
 
 There is no dedicated `harvest.feed()` system. To heal a Kami while it is harvesting, use the [kami.item.use()](kami.md#kamiitemuse) system (`system.kami.use.item`) with a healing item (e.g., food). This restores the Kami's health without interrupting the active harvest. Monitor your Kami's health via `getKami()` and feed before it reaches zero to avoid liquidation.
+
+## Health Monitoring
+
+### Understanding Stat Fields
+
+Each Kami stat (health, power, harmony, violence) is a struct with four `int32` fields:
+
+```solidity
+struct Stat { int32 base; int32 shift; int32 boost; int32 sync; }
+```
+
+| Field | Meaning |
+|-------|---------|
+| `base` | Innate value from the Kami's traits and level |
+| `shift` | Permanent modifications (from leveling, equipment changes, etc.) |
+| `boost` | Temporary buffs from equipment, skills, and active effects |
+| `sync` | The last on-chain synced value — updated when the chain processes a harvest collect, stop, or other state-changing action |
+
+**Effective stat value** = `base + shift + boost`. The `sync` field reflects the last computed on-chain snapshot and may lag behind the real-time effective value during active harvests (since health drains continuously but only syncs on actions).
+
+### Monitoring During Harvest
+
+```javascript
+// Poll Kami health during an active harvest
+const getter = new ethers.Contract(getterAddr, GETTER_ABI, provider);
+
+async function checkHealth(kamiEntityId) {
+  const kami = await getter.getKami(kamiEntityId);
+  const h = kami.stats.health;
+  const effective = Number(h.base) + Number(h.shift) + Number(h.boost);
+  console.log(`Health: ${effective} (base=${h.base} shift=${h.shift} boost=${h.boost} sync=${h.sync})`);
+  return effective;
+}
+
+// Poll every 60 seconds and heal if health drops below 50
+const interval = setInterval(async () => {
+  const hp = await checkHealth(kamiEntityId);
+  if (hp < 50) {
+    console.log("Health low — feeding Kami");
+    const feedTx = await feedSystem.executeTyped(kamiEntityId, 11302); // Cheeseburger (HP+50)
+    await feedTx.wait();
+  }
+}, 60_000);
+```
+
+> **Note:** Yominet has ~1 second block times. Polling every 30-60 seconds is sufficient for health monitoring. Health drain rate depends on the Kami's Harmony stat and active skills — higher Harmony means slower drain.
+
+### Health Thresholds
+
+- **0** — Kami is dead. Harvest stops automatically. Must revive before further use.
+- **< 50** — Conservative healing threshold. Feed before reaching zero.
+- **> 100** — Safe range for most harvests.
+
+There is no exact formula published for the drain rate, but empirically: a low-level Kami with base stats drains roughly 1 HP per minute. Higher Harmony and "Strain Bonus" skills reduce this significantly.
 
 ---
 

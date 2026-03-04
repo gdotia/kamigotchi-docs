@@ -370,6 +370,8 @@ function getQuestRegistryEntityId(questIndex) {
 | **Quest (registry)** | `keccak256("registry.quest", questIndex)` | ✅ Yes |
 | **Scavenge Bar (registry)** | `keccak256("registry.scavenge", field, index)` | ✅ Yes |
 | **Scavenge Bar (instance)** | `keccak256("scavenge.instance", field, index, holderID)` | ✅ Yes |
+| **Inventory** | `keccak256("inventory.instance", holderEntityId, itemIndex)` | ✅ Yes |
+| **Equipment** | `keccak256("equipment.instance", holderEntityId, slot)` | ✅ Yes |
 | **Friend Request** | `keccak256("friendship", sourceAccID, targetAccID)` | ✅ Yes |
 
 ---
@@ -482,6 +484,130 @@ const [entityId] = ethers.AbiCoder.defaultAbiCoder().decode(
 
 ---
 
+## Parsing Transaction Events
+
+Kamigotchi emits structured events via `LibEmitter`, which writes to MUD's `Store_SetRecord` log. This is the primary way to extract non-deterministic entity IDs (trades, marketplace orders, portal receipts) from mined transactions.
+
+### Store_SetRecord Event
+
+All MUD state changes emit a `Store_SetRecord` event:
+
+```javascript
+const STORE_SET_RECORD_ABI = [
+  "event Store_SetRecord(bytes32 tableId, bytes32[] keyTuple, bytes staticData, bytes32 encodedLengths, bytes dynamicData)",
+];
+```
+
+The `tableId` identifies which component/table was modified, and `keyTuple[0]` typically contains the entity ID.
+
+### Extracting Entity IDs from Transaction Receipts
+
+```javascript
+import { ethers } from "ethers";
+
+const STORE_SET_RECORD_TOPIC = ethers.id(
+  "Store_SetRecord(bytes32,bytes32[],bytes,bytes32,bytes)"
+);
+
+/**
+ * Extract entity IDs created in a transaction by filtering Store_SetRecord logs.
+ * @param {ethers.TransactionReceipt} receipt - The mined transaction receipt
+ * @param {string} [tableId] - Optional: filter by specific table ID (component hash)
+ * @returns {bigint[]} Array of entity IDs found in keyTuple[0]
+ */
+function extractEntityIds(receipt, tableId) {
+  const iface = new ethers.Interface([
+    "event Store_SetRecord(bytes32 tableId, bytes32[] keyTuple, bytes staticData, bytes32 encodedLengths, bytes dynamicData)",
+  ]);
+
+  const entityIds = [];
+  for (const log of receipt.logs) {
+    if (log.topics[0] !== STORE_SET_RECORD_TOPIC) continue;
+    try {
+      const parsed = iface.parseLog({ topics: log.topics, data: log.data });
+      if (tableId && parsed.args.tableId !== tableId) continue;
+      if (parsed.args.keyTuple.length > 0) {
+        entityIds.push(BigInt(parsed.args.keyTuple[0]));
+      }
+    } catch (_) {
+      // Skip non-matching logs
+    }
+  }
+  return entityIds;
+}
+```
+
+### Marketplace: Extracting Listing and Offer IDs
+
+After creating a listing or offer, the new order entity ID appears in the Store_SetRecord logs:
+
+```javascript
+// Create a listing
+const listTx = await listSystem.executeTyped(kamiIndex, price, expiry);
+const listReceipt = await listTx.wait();
+
+// Extract the listing entity ID from events
+const entityIds = extractEntityIds(listReceipt);
+// The listing ID is typically the first new entity created
+// Filter by checking which IDs are new marketplace order entities
+console.log("Created entity IDs:", entityIds);
+```
+
+> **Tip:** Marketplace order creation emits Store_SetRecord for multiple components (order data, ownership, type). The order entity ID appears consistently across these logs. Deduplicate the extracted IDs to find unique entities.
+
+### Trades: Extracting Trade IDs
+
+```javascript
+const tradeTx = await tradeSystem.executeTyped(buyIdx, buyAmt, sellIdx, sellAmt, 0);
+const tradeReceipt = await tradeTx.wait();
+
+const tradeEntityIds = extractEntityIds(tradeReceipt);
+// The trade entity ID is the non-deterministic ID from world.getUniqueEntityId()
+console.log("Trade entity ID:", tradeEntityIds[0]);
+```
+
+### ERC20 Portal: Extracting Withdrawal Receipt IDs
+
+```javascript
+const withdrawTx = await portalSystem.withdraw(itemIndex, amount);
+const withdrawReceipt = await withdrawTx.wait();
+
+const receiptIds = extractEntityIds(withdrawReceipt);
+// Use this receipt ID later to claim or cancel the withdrawal
+const receiptId = receiptIds[0];
+```
+
+### Droptable: Extracting Pending Reveal IDs
+
+Harvest collections, quest completions, and sacrifices may create droptable entities that need revealing:
+
+```javascript
+const collectTx = await harvestSystem.executeTyped(harvestId);
+const collectReceipt = await collectTx.wait();
+
+// Droptable entities are created during collection
+const droptableIds = extractEntityIds(collectReceipt);
+// Reveal them:
+await droptableRevealSystem.executeTyped(droptableIds);
+```
+
+### Gacha: Extracting Commit IDs from Mint
+
+```javascript
+const mintTx = await mintSystem.executeTyped(amount);
+const mintReceipt = await mintTx.wait();
+
+// Commit IDs from the mint transaction
+const commitIds = extractEntityIds(mintReceipt);
+// Wait at least 1 block, then reveal
+await new Promise((r) => setTimeout(r, 2000));
+await revealSystem.reveal(commitIds);
+```
+
+> **Note:** The `extractEntityIds` function returns ALL entity IDs created or modified in a transaction. For complex transactions that touch many entities, you may need to filter by component table ID or deduplicate. In practice, the non-deterministic IDs (from `world.getUniqueEntityId()`) are distinguishable because they are sequential integers, while deterministic IDs are large keccak hashes.
+
+---
+
 ## Complete Helper Library
 
 ```javascript
@@ -565,6 +691,28 @@ export const EntityIds = {
         ethers.solidityPacked(
           ["string", "string", "uint32", "uint256"],
           ["scavenge.instance", field, index, holderEntityId]
+        )
+      )
+    );
+  },
+
+  inventory(holderEntityId, itemIndex) {
+    return BigInt(
+      ethers.keccak256(
+        ethers.solidityPacked(
+          ["string", "uint256", "uint32"],
+          ["inventory.instance", holderEntityId, itemIndex]
+        )
+      )
+    );
+  },
+
+  equipment(holderEntityId, slot) {
+    return BigInt(
+      ethers.keccak256(
+        ethers.solidityPacked(
+          ["string", "uint256", "string"],
+          ["equipment.instance", holderEntityId, slot]
         )
       )
     );

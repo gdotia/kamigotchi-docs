@@ -471,6 +471,22 @@ await tx.wait();
 console.log("Withdrawal initiated — use ERC20.claim() after the pending period.");
 ```
 
+#### Capturing the Receipt ID
+
+The `withdraw()` function returns a `uint256` receipt ID, but mined transactions don't expose return values in receipts. Capture it via event parsing:
+
+```javascript
+import { extractEntityIds } from "./event-helpers.js";
+
+const withdrawTx = await system.withdraw(onyxItemIndex, withdrawAmount);
+const withdrawReceipt = await withdrawTx.wait();
+const receiptId = extractEntityIds(withdrawReceipt)[0];
+console.log("Withdrawal receipt ID:", receiptId);
+// Use this receiptId with claim() or cancel() after the pending period
+```
+
+See [Parsing Transaction Events](entity-discovery.md#parsing-transaction-events) for the `extractEntityIds()` helper.
+
 ---
 
 ### ERC20.claim()

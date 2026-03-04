@@ -35,7 +35,22 @@ There is also an **admin-only** registry system (`system.kamimarket.registry`) f
 | **WETH** | `0xE1Ff7038eAAAF027031688E1535a055B2Bac2546` | ERC-20 wrapped ETH (bridged via LayerZero) — the underlying asset is also used as native gas, but WETH is the ERC-20 form |
 | **KamiMarketVault** | *(resolve from World config — see below)* | Holds WETH approvals for offer settlement |
 
-> **Finding the KamiMarketVault address:** The vault address is set dynamically via `KAMI_MARKET_VAULT` in the World contract's `ConfigComponent`. Query `LibConfig.getAddress(components, "KAMI_MARKET_VAULT")` on-chain, or read the `ConfigComponent` for the `KAMI_MARKET_VAULT` key to resolve it. The admin registry system (`system.kamimarket.registry`) sets this value at deployment.
+> **Finding the KamiMarketVault address:** The vault address is stored in the World's `ConfigComponent`. Read it using the component read pattern:
+>
+> ```javascript
+> // Resolve KamiMarketVault address from ConfigComponent
+> const configAddr = await getComponentAddress("component.Config");
+> const config = new ethers.Contract(
+>   configAddr,
+>   ["function getValue(uint256) view returns (uint256)"],
+>   provider
+> );
+> const vaultKey = ethers.keccak256(ethers.toUtf8Bytes("KAMI_MARKET_VAULT"));
+> const vaultRaw = await config.getValue(vaultKey);
+> const vaultAddress = ethers.getAddress(ethers.toBeHex(vaultRaw, 20));
+> ```
+>
+> See [Reading On-Chain Components](../contracts/ids-and-abis.md#reading-on-chain-components) for the full `getComponentAddress()` helper.
 
 ### Fee Structure
 
@@ -72,6 +87,28 @@ console.log("Listing tx hash:", receipt.hash);
 // Resolve listing ID from confirmed events/indexer output keyed by receipt.hash.
 // Avoid staticCall-generated IDs in production because IDs are non-deterministic.
 ```
+
+### Extracting Order IDs from Transaction Receipts
+
+For production bots, parse `Store_SetRecord` events from the transaction receipt to extract the order entity ID:
+
+```javascript
+import { extractEntityIds } from "./event-helpers.js"; // See Entity Discovery — Parsing Transaction Events
+
+// After listing
+const listTx = await listSystem.executeTyped(kamiIndex, price, expiry);
+const listReceipt = await listTx.wait();
+const listingId = extractEntityIds(listReceipt)[0];
+console.log("Listing entity ID:", listingId);
+
+// After making an offer
+const offerTx = await offerSystem.executeTypedOffer(kamiIndex, price, expiry);
+const offerReceipt = await offerTx.wait();
+const offerId = extractEntityIds(offerReceipt)[0];
+console.log("Offer entity ID:", offerId);
+```
+
+See [Parsing Transaction Events](entity-discovery.md#parsing-transaction-events) for the full `extractEntityIds()` helper and event parsing details.
 
 ---
 
@@ -136,6 +173,8 @@ const tx = await buySystem.executeTyped(listingIDs, { value: totalPrice });
 await tx.wait();
 console.log("Kamis purchased!");
 ```
+
+> **How to find listing IDs:** Listing IDs are non-deterministic and cannot be derived. To discover active listings, either: (1) parse `Store_SetRecord` events from listing transactions (see [Parsing Transaction Events](entity-discovery.md#parsing-transaction-events)), or (2) query an off-chain indexer if available. There is no on-chain function to enumerate all active listings.
 
 **What happens on buy:**
 1. Verifies all listings are active, not expired, and buyer doesn't own them
@@ -286,6 +325,8 @@ const tx = await acceptSystem.execute(batchArgs);
 await tx.wait();
 console.log("Batch accepted — 3 Kamis sold!");
 ```
+
+> **How to find offer IDs:** Offer IDs are non-deterministic. To discover offers on your Kamis, either: (1) parse `Store_SetRecord` events from offer transactions, or (2) query an off-chain indexer. See [Parsing Transaction Events](entity-discovery.md#parsing-transaction-events).
 
 **What happens on accept:**
 1. Verifies offer is active, not expired, and seller doesn't own the offer
@@ -462,9 +503,19 @@ async function main() {
     );
     const listTx = await listSys.executeTyped(42, price, 0);
     const listReceipt = await listTx.wait();
-    console.log("✅ Kami #42 listed for 0.1 ETH. Tx:", listReceipt.hash);
-    console.log("Resolve LISTING_ID from confirmed indexer/event output, then rerun with:");
-    console.log("MARKET_MODE=buy LISTING_ID=<value>");
+
+    // Extract listing ID from Store_SetRecord events in the receipt
+    // See "Extracting Order IDs from Transaction Receipts" above
+    const { extractEntityIds } = await import("./event-helpers.js");
+    const ids = extractEntityIds(listReceipt);
+    if (ids.length > 0) {
+      console.log("✅ Kami #42 listed. Listing ID:", ids[0].toString());
+      console.log("Rerun with: MARKET_MODE=buy LISTING_ID=" + ids[0].toString());
+    } else {
+      console.log("✅ Kami #42 listed. Tx:", listReceipt.hash);
+      console.log("Could not extract listing ID from events — resolve via indexer, then rerun with:");
+      console.log("MARKET_MODE=buy LISTING_ID=<value>");
+    }
     return;
   }
 
