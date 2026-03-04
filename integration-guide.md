@@ -36,13 +36,14 @@ console.log("Connected to Yominet (block:", blockNumber + ")");
 
 ## Step 2: Set Up Wallets
 
-You need two wallets — one for administrative actions (owner) and one for gameplay (operator).
+Kamigotchi uses a **dual-wallet model**. The official game client handles this via [Privy](https://privy.io) — players connect their external wallet (Owner), and Privy auto-creates an embedded wallet (Operator). For programmatic integrations, you manage both wallets directly:
 
 ```javascript
 // Owner wallet — holds NFTs, registers account, does privileged operations
 const ownerSigner = new ethers.Wallet(process.env.OWNER_PRIVATE_KEY, provider);
 
 // Operator wallet — handles routine gameplay transactions
+// (In the official client, this is Privy's embedded wallet)
 const operatorSigner = new ethers.Wallet(process.env.OPERATOR_PRIVATE_KEY, provider);
 
 console.log("Owner:", ownerSigner.address);

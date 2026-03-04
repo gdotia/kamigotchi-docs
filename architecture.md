@@ -42,7 +42,7 @@ Systems are stateless smart contracts that contain **game logic**. Each system:
 - Is identified by a human-readable **System ID** (e.g., `system.kami.level`)
 - Has its address resolved dynamically: `World.systems(keccak256("system.kami.level"))`
 
-Kamigotchi has **58 registered systems** — see [System IDs & ABIs](contracts/ids-and-abis.md) for the complete list.
+Kamigotchi has **58 documented player-facing systems** — see [System IDs & ABIs](contracts/ids-and-abis.md) for the complete list. The World contract contains additional internal and admin systems not covered here.
 
 ### Components
 
@@ -109,6 +109,31 @@ A delegated wallet (typically managed by [Privy](https://privy.io)) for frequent
 - All routine gameplay actions
 
 > **Note:** The operator wallet is set during registration and can be updated by the owner wallet via `set.operator()`. This separation means the owner's private key is rarely exposed to transaction signing.
+
+### How the Official Client Creates Wallets
+
+The Kamigotchi game client uses [Privy](https://privy.io) to manage the wallet flow:
+
+1. **Player connects** their external wallet (MetaMask, Rabby, etc.) via Privy → this becomes the **Owner wallet**
+2. **Privy auto-creates** an embedded wallet on login (`createOnLogin: 'all-users'`) → this becomes the **Operator wallet**
+3. **Registration** calls `register(embeddedWalletAddress, name)` — the player just enters a username
+
+The embedded wallet acts as a session key: it signs routine gameplay transactions without explicit approval popups, while the owner wallet stays secure for privileged operations.
+
+### Programmatic / Bot Integrations
+
+For API integrations and bots, you can bypass Privy and use two private keys directly:
+
+```javascript
+const ownerSigner = new ethers.Wallet(process.env.OWNER_PRIVATE_KEY, provider);
+const operatorSigner = new ethers.Wallet(process.env.OPERATOR_PRIVATE_KEY, provider);
+
+// Register: pass the operator address during account creation
+const registerSystem = await getSystem("system.account.register", registerABI, ownerSigner);
+await registerSystem.executeTyped(operatorSigner.address, "MyBotAccount");
+```
+
+This is the approach used throughout the [Integration Guide](integration-guide.md) and Player API documentation.
 
 ---
 

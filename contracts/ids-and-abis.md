@@ -1,6 +1,6 @@
 # System IDs & ABI References
 
-Kamigotchi has **58 registered systems** in the World contract. Each system is identified by a human-readable string ID, hashed with `keccak256` for on-chain lookup.
+Kamigotchi has **58 documented player-facing systems** in the World contract. Each system is identified by a human-readable string ID, hashed with `keccak256` for on-chain lookup. The World contains additional internal and admin systems not covered here.
 
 ---
 
@@ -70,7 +70,7 @@ Kamigotchi has **58 registered systems** in the World contract. Each system is i
 | `system.item.burn` | Burn items | Operator | [Items](../player-api/items-and-crafting.md) |
 | `system.item.transfer` | Transfer items | Owner | [Items](../player-api/items-and-crafting.md) |
 | `system.craft` | Craft item from recipe | Operator | [Items](../player-api/items-and-crafting.md) |
-| `system.droptable.item.reveal` | Reveal droptable items | Operator | [Items](../player-api/items-and-crafting.md) |
+| `system.droptable.item.reveal` | Reveal droptable items | Any | [Items](../player-api/items-and-crafting.md) |
 
 ### Quest Systems
 

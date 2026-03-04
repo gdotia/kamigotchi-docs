@@ -213,7 +213,7 @@ Rooms are identified by a `uint32` index. On-chain entity ID: `keccak256("room",
 | 89 | Trophies of the Hunt | — | Other World |
 | 90 | Scenic View | — | Other World |
 
-> **Total rooms:** 66. Room connectivity (exits) defines the world graph. Some exits are gated by quest completion or items.
+> **Total rooms:** 68. Room connectivity (exits) defines the world graph. Some exits are gated by quest completion or items.
 
 ---
 
@@ -254,7 +254,7 @@ Nodes are the harvestable locations within rooms. Each node shares an index with
 | 52 | Airplane Crash | Eerie | MUSU | — | 300 |
 | 53 | Blooming Tree | Eerie | MUSU | — | 300 |
 
-> **Total nodes:** 67. Shown above are the first 30; for the full list see `packages/contracts/deployment/world/data/rooms/nodes.csv`. Node affinity affects harvest efficacy — match your Kami's body/hand affinities to the node affinity for bonuses.
+> **Total nodes:** 64. Shown above are the first 30; for the full list see `packages/contracts/deployment/world/data/rooms/nodes.csv`. Node affinity affects harvest efficacy — match your Kami's body/hand affinities to the node affinity for bonuses. Note: most nodes use YieldIndex=1, but nodes 18 (Cave Crossroads), 83 (Canyon Bridge), and 88 (Treasure Hoard) use YieldIndex=2.
 
 ---
 
