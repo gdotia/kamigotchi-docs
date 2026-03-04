@@ -235,6 +235,89 @@ You can also collect and stop in any order — collecting after stopping works f
 
 ---
 
+## Yield & Timing
+
+Harvest rewards accumulate continuously over time. Understanding the yield formula helps optimize Kami placement.
+
+### How Bounty Accrues
+
+Harvest output (called **bounty**) is calculated each time a harvest is **synced** (on collect or stop). The formula in `LibHarvest.calcBounty()` is:
+
+```
+bounty = (rate × duration × boost) / precision
+```
+
+Where:
+- **rate** = `fertility + intensity` (in MUSU/second, at 1e6 precision)
+- **duration** = seconds since last sync (`block.timestamp - lastSyncTimestamp`)
+- **boost** = base boost + bonus from skills/equipment (`HARV_BOUNTY_BOOST`)
+- **precision** = combined precision divisor from config
+
+### Fertility (Base Rate)
+
+Fertility is the core harvest rate, driven by the Kami's **Power** stat:
+
+```
+fertility = (precision × power × ratio × efficacy) / 3600
+```
+
+- **Power** — Kami's total Power stat (base + bonuses from skills/equipment)
+- **ratio** — Core fertility multiplier from `KAMI_HARV_FERTILITY` config
+- **efficacy** — Affinity matchup bonus (see below)
+
+### Efficacy (Affinity Matching)
+
+Efficacy modifies fertility based on how well the Kami's **body and hand affinities** match the node's affinity:
+
+- **Matching affinity** → Positive efficacy boost (harvest more)
+- **Neutral affinity** → Reduced bonus
+- **Opposing affinity** → Negative efficacy shift (harvest less)
+- **Normal trait** → Gets half the matching bonus
+
+Nodes can have one or two affinities (e.g., "Eerie, Scrap"). The system picks the most favorable matchup order — body affinity has more impact than hand affinity.
+
+**Key takeaway:** Place Kamis on nodes whose affinity matches their body and hand types.
+
+### Intensity (Time Bonus)
+
+Intensity is a secondary yield component that **grows over time** and scales with the Kami's **Violence** stat:
+
+```
+intensity = (precision × (violence_base + minutes_elapsed) × boost) / (ratio × 3600)
+```
+
+- **violence_base** = config multiplier × Kami's Violence stat
+- **minutes_elapsed** = minutes since the last intensity reset (rounded down)
+- **boost** = base + `HARV_INTENSITY_BOOST` from skills/equipment
+
+Intensity increases the longer a Kami stays on a node. It resets when a harvest is started or moved.
+
+### When to Collect
+
+- Bounty accrues **continuously** — there is no "ready" timer or fixed interval.
+- **Collecting early** gives you whatever has accumulated so far; **collecting later** gives more.
+- Calling `harvest.collect()` syncs the bounty (snapshots the accrued amount), resets the duration timer, and adds the bounty to the account's inventory.
+- The Kami's **Health decreases** over time while harvesting (strain). If health reaches zero, the Kami is liquidated. Monitor health and collect/stop before it gets critical.
+- Calling `harvest.stop()` automatically collects any remaining bounty before stopping.
+
+### Harvest Node Data
+
+Each node has a **Yield Index** (the item index granted — typically `1` for MUSU) and a **Scav Cost** (the stamina cost for scavenging at that node). Nodes also have a **Level Limit** — some beginner nodes cap the Kami level that can earn XP there.
+
+See the [Harvest Nodes table](../references/game-data.md#harvest-nodes) for per-node affinity, yield index, and scav cost values.
+
+### Summary
+
+| Factor | Stat | Effect |
+|--------|------|--------|
+| Fertility | Power | Higher Power → faster base MUSU rate |
+| Efficacy | Body/Hand affinity | Matching node affinity → bonus yield |
+| Intensity | Violence | Higher Violence + longer time → bonus yield |
+| Bounty boost | Skills/Equipment | Percentage multiplier on total output |
+| Strain | Health/Harmony | Higher Harmony/skills → slower health drain |
+
+---
+
 ## Related Pages
 
 - [Kami](kami.md) — Kami stats that affect harvest performance

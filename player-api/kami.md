@@ -199,8 +199,12 @@ await tx.wait();
 
 ### Notes
 
-- Each Kami has limited equipment slots. Equipping to a full slot will revert.
-- Equipment slot types use the format `"{EntityType}_{SlotName}_Slot"` — e.g., `"Kami_Pet_Slot"`, `"Kami_Hat_Slot"`, `"Account_Badge_Slot"`. Slots are defined per-item in the item registry's `For` field. Each entity has a default capacity of 1 equipped item, expandable via the `EQUIP_CAPACITY_SHIFT` bonus.
+- **Slot is automatic:** You only pass the `itemIndex` — the system reads the item's `For` field from the registry to determine the slot. For example, if the item has `For = "Kami_Pet_Slot"`, it goes into the Kami's Pet slot. You do **not** pass a slot parameter when equipping.
+- **Slot conflict handling:** If the target slot is already occupied, the existing item is **automatically unequipped** (returned to your inventory) before the new item is equipped. No need to manually unequip first.
+- **Capacity limit:** Each entity has a default equipment capacity of **1** total equipped item (across all slots), expandable via the `EQUIP_CAPACITY_SHIFT` bonus. Adding new equipment (not replacing) checks capacity — replacing an item in the same slot does not count as adding.
+- **Kami state requirement:** The Kami must be in `"RESTING"` state to equip items. Harvesting or dead Kamis cannot be equipped.
+- **Item consumed:** The item is consumed from your account's inventory when equipped, and returned when unequipped.
+- Equipment slot types use the format `"{EntityType}_{SlotName}_Slot"` — e.g., `"Kami_Pet_Slot"`, `"Account_Badge_Slot"`. Currently all equipment items in the game use the `Kami_Pet_Slot`. See [Equipment Reference](../references/game-data.md#equipment) for the full list.
 
 ---
 

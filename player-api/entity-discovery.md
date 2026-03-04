@@ -45,6 +45,8 @@ function addressToEntity(address addr) pure returns (uint256) {
 
 The `getByOwner()` function uses the same derivation — it takes `uint256(uint160(owner))` and verifies the entity has the `"ACCOUNT"` shape.
 
+> **Starting room:** After registration, the account's `IndexRoomComponent` is set to **1** (Misty Riverside). You can read the current room via `GetterSystem.getAccount(id).room`.
+
 ---
 
 ## Kami Entity IDs
@@ -439,6 +441,130 @@ export const EntityIds = {
     );
   },
 };
+```
+
+---
+
+## Inventory Discovery
+
+The `GetterSystem.getAccount()` returns an `AccountShape` with four fields: `index`, `name`, `currStamina`, and `room`. **It does not include inventory.** You must query inventory separately.
+
+### How Inventory Works
+
+Each inventory entry is an entity with three components:
+
+| Component | Description |
+|-----------|-------------|
+| `IDOwnsInventoryComponent` | The holder's entity ID (your account ID) |
+| `IndexItemComponent` | The item's registry index (e.g., `1` for MUSU, `1001` for Wooden Stick) |
+| `ValueComponent` | The quantity held |
+
+Inventory entity IDs are **deterministic** — derived from the holder ID and item index:
+
+```solidity
+// Solidity (from LibInventory.sol)
+function genID(uint256 holderID, uint32 itemIndex) internal pure returns (uint256) {
+    return uint256(keccak256(abi.encodePacked("inventory.instance", holderID, itemIndex)));
+}
+```
+
+```javascript
+// JavaScript equivalent
+function getInventoryEntityId(holderEntityId, itemIndex) {
+  return BigInt(
+    ethers.keccak256(
+      ethers.solidityPacked(
+        ["string", "uint256", "uint32"],
+        ["inventory.instance", holderEntityId, itemIndex]
+      )
+    )
+  );
+}
+```
+
+### Reading a Specific Item Balance
+
+If you know which item you're looking for, compute the inventory entity ID and read the `ValueComponent`:
+
+```javascript
+// Check how much MUSU (item index 1) the account holds
+const accountId = BigInt(ownerAddress);
+const musuInventoryId = getInventoryEntityId(accountId, 1);
+
+// Read ValueComponent for this entity
+const balance = await valueComponent.get(musuInventoryId);
+console.log("MUSU balance:", balance.toString());
+```
+
+`LibInventory.getBalanceOf(components, holderID, itemIndex)` does exactly this internally.
+
+### Enumerating All Inventory Items
+
+To get **all** items held by an account, query the `IDOwnsInventoryComponent` for all entities with the account's ID as their value:
+
+```javascript
+// Get all inventory entity IDs for this account
+const inventoryIds = await idOwnsInventoryComponent.getEntitiesWithValue(accountId);
+
+// For each inventory entity, read the item index and quantity
+for (const invId of inventoryIds) {
+  const itemIndex = await indexItemComponent.get(invId);
+  const quantity = await valueComponent.get(invId);
+  console.log(`Item ${itemIndex}: ${quantity}`);
+}
+```
+
+This mirrors `LibInventory.getAllForHolder(components, holderID)` which returns all inventory entity IDs where `IDOwnsInventoryComponent` matches the holder.
+
+### Key Constants
+
+Some commonly referenced item indices:
+
+| Constant | Index | Item |
+|----------|-------|------|
+| `MUSU_INDEX` | 1 | $MUSU currency |
+| `GACHA_TICKET_INDEX` | 10 | Gacha Ticket |
+| `REROLL_TICKET_INDEX` | 11 | Reroll Ticket |
+| `ONYX_INDEX` | 100 | Onyx Shard ($ONYX) |
+| `OBOL_INDEX` | 1015 | Obol |
+
+### Notes
+
+- Inventory entities are **created lazily** — they only exist once a player has received at least one of that item.
+- When a balance reaches zero, the inventory entity is **deleted** to reduce state bloat.
+- The `TRANSFER_FEE` constant is set to 15 (used for inter-account item transfers).
+
+---
+
+## Equipment Discovery
+
+Equipment instances are also deterministic entities, derived from the holder ID and slot string:
+
+```javascript
+function getEquipmentEntityId(holderEntityId, slot) {
+  return BigInt(
+    ethers.keccak256(
+      ethers.solidityPacked(
+        ["string", "uint256", "string"],
+        ["equipment.instance", holderEntityId, slot]
+      )
+    )
+  );
+}
+
+// Example: Check if a Kami has something in the Pet slot
+const equipId = getEquipmentEntityId(kamiEntityId, "Kami_Pet_Slot");
+```
+
+To enumerate all equipment on an entity, query the `IDOwnsEquipmentComponent`:
+
+```javascript
+const equipIds = await idOwnsEquipmentComponent.getEntitiesWithValue(kamiEntityId);
+for (const eqId of equipIds) {
+  const itemIndex = await indexItemComponent.get(eqId);
+  const slot = await forComponent.get(eqId);
+  console.log(`Slot ${slot}: Item ${itemIndex}`);
+}
 ```
 
 ---
