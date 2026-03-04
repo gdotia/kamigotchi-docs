@@ -20,7 +20,37 @@ Why this matters:
 
 ---
 
-## 2) Set Required Environment Variables
+## 2) Fund Your Wallets
+
+**There is no faucet on Yominet.** You must bridge real ETH to get started.
+
+Two options to fund your wallets:
+
+1. **In-game bridge** — Open the Kamigotchi client, go to Settings > Bridge. This uses the Initia bridge to move ETH from mainnet/L1 to Yominet.
+2. **gas.zip** — A third-party bridge aggregator that supports Yominet.
+
+Fund **both** your Owner and Operator wallets with ETH for gas.
+
+**Recommended amounts:**
+- 0.01 ETH per wallet for gas
+- Additional budget for Kami acquisition: 0.005+ ETH for the Newbie Vendor, or 0.1+ ETH for gacha minting
+
+If you need to generate fresh wallets:
+
+```javascript
+import { ethers } from "ethers";
+const owner = ethers.Wallet.createRandom();
+const operator = ethers.Wallet.createRandom();
+console.log("Owner address:", owner.address);
+console.log("Owner private key:", owner.privateKey);
+console.log("Operator address:", operator.address);
+console.log("Operator private key:", operator.privateKey);
+// ⚠️ Save these keys securely — they control your wallets
+```
+
+---
+
+## 3) Set Required Environment Variables
 
 ```bash
 # Linux/macOS
@@ -36,7 +66,7 @@ $env:OPERATOR_PRIVATE_KEY="0xYOUR_OPERATOR_PRIVATE_KEY"
 
 ---
 
-## 3) Run a Connectivity + Resolver Smoke Test
+## 4) Run a Connectivity + Resolver Smoke Test
 
 Create `bootstrap-check.js`:
 
@@ -108,7 +138,7 @@ If this succeeds, your environment is ready for the [Integration Guide](integrat
 
 ---
 
-## 4) First-Run Flow Pitfalls
+## 5) First-Run Flow Pitfalls
 
 1. `Cannot use import statement outside a module`:
 Fix by running `npm pkg set type=module`.

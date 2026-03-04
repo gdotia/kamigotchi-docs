@@ -59,6 +59,8 @@ console.log("Harvesting started for 3 Kamis");
 
 ### Notes
 
+- The `nodeIndex` parameter corresponds to the room index — each harvest node shares an index with its room (see [Game Data](../references/game-data.md#harvest-nodes)).
+- A newly purchased or minted Kami starts in the account's current room.
 - Kamis already assigned to a harvest will cause the transaction to revert.
 - Each harvest node has a maximum capacity — check room data for availability.
 - Move to the room first with [account.move()](account.md#move) before starting a harvest.

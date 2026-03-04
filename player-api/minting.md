@@ -90,7 +90,7 @@ console.log("Kamis revealed!");
 
 ### Notes
 
-- There may be a minimum block delay between `mint()` and `reveal()` for randomness security.
+- **Wait at least 1 block between `mint()` and `reveal()`** for randomness security.
 - Batch reveals are more gas-efficient.
 - After revealing, use [echo.kamis()](echo.md) if the UI doesn't update.
 
@@ -140,6 +140,18 @@ console.log("Kamis rerolled!");
 ---
 
 ## Buy Gacha Tickets
+
+### Gacha Funding Checklist
+
+Before buying tickets, you must have in-game ETH (item 103). Follow these steps:
+
+1. **Bridge ETH to Yominet** — use the Kamigotchi client bridge or gas.zip
+2. **Wrap native ETH to WETH** — call `WETH.deposit()` on `0xE1Ff7038eAAAF027031688E1535a055B2Bac2546`
+3. **Approve WETH** — call `WETH.approve(WORLD_ADDRESS, amount)`
+4. **Deposit WETH as in-game ETH** — call `system.erc20.portal.deposit(103, amount)` — see [Portal](portal.md)
+5. **Buy tickets** — call `buyPublic(amount)` on `system.buy.gacha.ticket`
+
+Budget: **0.1 ETH per public ticket**.
 
 ### Prerequisites
 

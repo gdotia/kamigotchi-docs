@@ -19,6 +19,31 @@ If you want the shortest first-run path for a new bot developer, start with [Age
 
 ---
 
+## Funding Your Wallet
+
+**There is no faucet on Yominet.** You must bridge real ETH before you can transact.
+
+Two options:
+
+1. **In-game bridge** — Open the Kamigotchi client, go to Settings > Bridge (uses the Initia bridge).
+2. **gas.zip** — A third-party bridge aggregator that supports Yominet.
+
+**Cost summary:**
+
+| Action | Cost | Currency |
+|--------|------|----------|
+| Gas (thousands of txs) | ~0.001 ETH | Native ETH |
+| Newbie Vendor (first Kami) | 0.005-0.05 ETH | Native ETH (msg.value) |
+| Gacha ticket (public) | 0.1 ETH each | In-game ETH (item 103, deposited via Portal) |
+| Marketplace listing | Variable | Native ETH (msg.value) |
+| Marketplace offer | Variable | WETH (approval-based) |
+
+**Recommended starting budget:** 0.2-0.5 ETH bridged to Yominet.
+
+> **Note:** Fund **both** your Owner and Operator wallets. Both need ETH for gas since they each submit transactions.
+
+---
+
 ## Step 0: Create a Runnable Project
 
 ```bash
@@ -216,6 +241,8 @@ console.log("First Kami purchased from the Newbie Vendor!");
 > **Selecting `kamiIndex`:** this flow uses a concrete preflight probe (`executeTyped.staticCall`) to find a currently valid index from your candidate list before sending a paid tx.
 
 > **Restrictions:** One purchase per account, only within 24 hours of registration. Minimum price 0.005 ETH. The purchased Kami is soulbound for 3 days (cannot be listed or unstaked). See [KamiSwap — Marketplace](player-api/marketplace.md) for full details.
+
+> **Finding your Kami's entity ID after purchase:** After a successful vendor buy, you need the Kami's entity ID to use it in gameplay systems (harvesting, combat, etc.). The entity ID is derived as `keccak256(abi.encodePacked("kami", uint256(kamiTokenIndex)))`. You can find the `kamiTokenIndex` from the purchase transaction's events, or by querying your account's Kami list via the getter system. See [Entity Discovery](player-api/entity-discovery.md) for the full derivation helpers.
 
 ### Option B: Gacha Minting
 
@@ -520,16 +547,49 @@ async function main() {
   await (await move.executeTyped(1, { gasLimit: 1_200_000 })).wait();
   console.log("✅ Moved to room 1");
 
-  // 3. Send a chat message
-  const chat = await sys(
-    "system.chat",
-    ["function executeTyped(string) returns (bytes)"],
-    operatorSigner
+  // 3. Buy first Kami from Newbie Vendor (owner wallet, native ETH)
+  const vendor = await sys(
+    "system.newbievendor.buy",
+    [
+      "function executeTyped(uint32 kamiIndex) payable returns (bytes)",
+      "function calcPrice() view returns (uint256)",
+    ],
+    ownerSigner
   );
-  await (await chat.executeTyped("Hello from the API!")).wait();
-  console.log("✅ Chat sent");
+  const price = await vendor.calcPrice();
+  // Probe display slots to find a valid index
+  let kamiIndex = null;
+  for (const candidate of [0, 1, 2]) {
+    try {
+      await vendor.executeTyped.staticCall(candidate, { value: price });
+      kamiIndex = candidate;
+      break;
+    } catch (_) {}
+  }
+  if (kamiIndex === null) throw new Error("No valid vendor index found");
+  await (await vendor.executeTyped(kamiIndex, { value: price })).wait();
+  console.log("✅ Purchased Kami from vendor (index:", kamiIndex, ")");
 
-  console.log("🎮 Integration complete!");
+  // 4. Derive the Kami entity ID
+  // After purchase, query account's Kami list or parse tx events to get kamiTokenIndex.
+  // Entity ID formula: keccak256(abi.encodePacked("kami", uint256(kamiTokenIndex)))
+  // For this example, assume kamiTokenIndex is known:
+  // const kamiEntityId = BigInt(ethers.keccak256(
+  //   ethers.solidityPacked(["string", "uint256"], ["kami", kamiTokenIndex])
+  // ));
+
+  // 5. Start harvesting (operator wallet)
+  // Node index == room index. We're in room 1, so nodeIndex = 1.
+  // Requires a valid kamiEntityId — uncomment below once you have it:
+  // const harvest = await sys(
+  //   "system.harvest.start",
+  //   ["function executeTyped(uint256 kamiID, uint32 nodeIndex, uint256 taxerID, uint256 taxAmt) returns (bytes)"],
+  //   operatorSigner
+  // );
+  // await (await harvest.executeTyped(kamiEntityId, 1, 0, 0)).wait();
+  // console.log("✅ Harvesting started in room 1");
+
+  console.log("🎮 Integration complete — register, move, and first Kami acquired!");
 }
 
 main().catch(console.error);
@@ -545,6 +605,8 @@ main().catch(console.error);
 | `account.move()` | 1,200,000 | Rooms with gates |
 | `harvest.liquidate()` | 7,500,000 | Complex PvP logic |
 | `gacha.mint(n)` | 4M + 3M × n | Scales with mint count |
+
+> **Default gas estimation:** For systems marked "Default" above, ethers.js gas estimation works correctly on Yominet. Only override `gasLimit` for the specific systems noted (move: 1.2M, liquidate: 7.5M, gacha mint: 4M+3M/kami).
 
 ---
 

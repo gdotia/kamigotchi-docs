@@ -215,6 +215,8 @@ Rooms are identified by a `uint32` index. On-chain entity ID: `keccak256("room",
 | 90 | Scenic View | — | Other World |
 
 > **Total rooms:** 68. Room connectivity (exits) defines the world graph. Some exits are gated by quest completion or items.
+>
+> **Room coordinates** are stored on-chain in the Location component. To determine room adjacency for movement, query the coordinates and check: adjacent rooms differ by exactly 1 on a single axis (x or y), same z-level. Some rooms also have special exits listed in the table above.
 
 ---
 

@@ -47,10 +47,11 @@ console.log("Account registered!");
 ### Notes
 
 - Each owner wallet can only register **one account**.
+- **Name rules:** Names must be 1-16 bytes, unique across all accounts. Alphanumeric characters are recommended.
 - The operator wallet can be changed later with `set.operator()`.
 - In the official client, Privy creates and manages the operator wallet automatically.
 - **Starting room:** New accounts are placed in **Room 1** (Misty Riverside). The contract sets `IndexRoomComponent` to `1` in `LibAccount.create()`.
-- Stamina is initialized from the `ACCOUNT_STAMINA` config (base value at index 0).
+- Initial stamina and move cost are on-chain config values (`ACCOUNT_STAMINA` indices 0 and 2). Query the config component for exact values.
 
 ---
 

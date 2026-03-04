@@ -209,6 +209,8 @@ const tx = await moveSystem.executeTyped(roomIndex, {
 });
 ```
 
+For systems with "Default" gas, ethers.js gas estimation works correctly on Yominet. No manual `gasLimit` override is needed.
+
 ---
 
 ## Error Handling
