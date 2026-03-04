@@ -43,7 +43,7 @@ Systems are stateless smart contracts that contain **game logic**. Each system:
 - Is identified by a human-readable **System ID** (e.g., `system.kami.level`)
 - Has its address resolved dynamically via the `systems()` component
 
-Kamigotchi has **65 documented player-facing systems** — see [System IDs & ABIs](contracts/ids-and-abis.md) for the complete list. The World contract contains additional internal and admin systems not covered here.
+Kamigotchi has **67 documented player-facing systems** — see [System IDs & ABIs](contracts/ids-and-abis.md) for the complete list. The World contract contains additional internal and admin systems not covered here.
 
 ### Components
 

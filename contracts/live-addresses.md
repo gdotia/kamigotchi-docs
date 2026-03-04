@@ -11,6 +11,7 @@ All core Kamigotchi contracts deployed on Yominet.
 | **World** | `0x2729174c265dbBd8416C6449E0E813E88f43D0E7` | [View](https://scan.initia.xyz/yominet-1/address/0x2729174c265dbBd8416C6449E0E813E88f43D0E7) |
 | **Kami721 (NFT)** | `0x5d4376b62fa8ac16dfabe6a9861e11c33a48c677` | [View](https://scan.initia.xyz/yominet-1/address/0x5d4376b62fa8ac16dfabe6a9861e11c33a48c677) |
 | **ONYX Token** | `0x4BaDFb501Ab304fF11217C44702bb9E9732E7CF4` | [View](https://scan.initia.xyz/yominet-1/address/0x4BaDFb501Ab304fF11217C44702bb9E9732E7CF4) |
+| **WETH** | `0xE1Ff7038eAAAF027031688E1535a055B2Bac2546` | [View](https://scan.initia.xyz/yominet-1/address/0xE1Ff7038eAAAF027031688E1535a055B2Bac2546) |
 
 ---
 

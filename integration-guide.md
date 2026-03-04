@@ -710,17 +710,20 @@ async function main() {
   // Vendor-bought Kamis typically have low indices. Scan up to 10000 as a safe range.
   if (kamiTokenIndex === null) {
     console.log("Scanning for Kami owned by this account...");
+    let consecutiveErrors = 0;
     for (let idx = 0; idx < 10000; idx++) {
       try {
         const kami = await getter.getKamiByIndex(idx);
+        consecutiveErrors = 0; // reset on success
         if (kami.account === accountEntityId) {
           kamiTokenIndex = idx;
           console.log("Found Kami: tokenIndex =", idx, "| name =", kami.name);
           break;
         }
       } catch (_) {
-        // Index doesn't exist yet — stop scanning
-        break;
+        consecutiveErrors++;
+        // 5 consecutive errors → likely past the last minted index
+        if (consecutiveErrors >= 5) break;
       }
     }
   }
@@ -742,7 +745,7 @@ async function main() {
   const accountData = await getter.getAccount(accountEntityId);
   const currentRoom = accountData.room;
 
-  if (currentRoom !== 1) {
+  if (Number(currentRoom) !== 1) {
     const moveSystem = await getSystem(
       "system.account.move",
       ["function executeTyped(uint32 roomIndex) returns (bytes)"],

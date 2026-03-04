@@ -235,10 +235,10 @@ Common revert reasons:
 
 | Error | Cause |
 |-------|-------|
-| `"Not owner"` | Called an Owner-only function from operator wallet |
-| `"Not registered"` | Account not yet registered |
-| `"Insufficient XP"` | Kami doesn't have enough XP to level up |
-| `"Already harvesting"` | Kami is already assigned to a harvest |
+| `"Account: no account detected"` | Account not yet registered — call `system.account.register` first |
+| `"Account: Operator not found"` | Operator wallet not set or calling from wrong wallet |
+| `"PetLevel: need more experience"` | Kami doesn't have enough XP to level up |
+| `"PetName: name too short"` / `"PetName: name too long"` | Name must be 3–12 characters |
 
 ---
 

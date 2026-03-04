@@ -263,7 +263,7 @@ Nodes are the harvestable locations within rooms. Each node shares an index with
 
 ## Skills
 
-Skills are organized in four trees with six tiers each. Each skill has a `uint32` index.
+Skills are organized in four trees with six tiers each (tiers 1–6). The on-chain config defines 8 tier slots (0–7), but tiers 0 and 7 have no deployed skills in the current version. Each skill has a `uint32` index.
 
 ### Predator Tree
 
@@ -652,7 +652,7 @@ Configuration values for the Kami marketplace.
 
 | Contract | Address | Description |
 |----------|---------|-------------|
-| **WETH** | `0xE1Ff7038eAAAF027031688E1535a055B2Bac2546` | Bridged ETH via LayerZero — same token used for gas on Yominet |
+| **WETH** | `0xE1Ff7038eAAAF027031688E1535a055B2Bac2546` | ERC-20 wrapped ETH (bridged via LayerZero) — not the native gas token itself, but wraps the same underlying asset |
 | **KamiMarketVault** | *(from `KAMI_MARKET_VAULT` config)* | Holds WETH approvals for offer settlement |
 
 ### Configuration
