@@ -61,6 +61,8 @@ const levelSystemAddr = await getSystemAddress("system.kami.level");
 console.log("KamiLevelSystem:", levelSystemAddr);
 ```
 
+> For the full resolver with legacy fallback support, see the [Integration Guide](integration-guide.md).
+
 ### Why Dynamic Resolution?
 
 The MUD framework allows systems to be **upgraded** by deploying new contracts and updating the World registry. Hardcoding system addresses would break on upgrades. Always resolve from the World contract.

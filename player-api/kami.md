@@ -86,7 +86,7 @@ await tx.wait();
 
 ## sacrificeCommit()
 
-Sacrifice a Kami to receive a petpet.
+Sacrifice a Kami to receive loot.
 
 | Property | Value |
 |----------|-------|
@@ -139,7 +139,7 @@ Reveal loot from a committed sacrifice.
 
 ### Description
 
-Reveals the loot/petpet generated from a sacrifice commit. For batch reveals, use `executeTypedBatch()`.
+Reveals the loot generated from a sacrifice commit. For batch reveals, use `executeTypedBatch()`.
 
 ### Code Example
 
@@ -203,7 +203,7 @@ await tx.wait();
 
 ### Notes
 
-- **Slot is automatic:** You only pass the `itemIndex` — the system reads the item's `For` field from the registry to determine the slot. For example, if the item has `For = "Kami_Pet_Slot"`, it goes into the Kami's Pet slot. You do **not** pass a slot parameter when equipping.
+- **Slot is automatic:** You only pass the `itemIndex` — the system reads the item's `For` field from the registry to determine the slot. For example, if the item has `For = "Kami_Pet_Slot"` (the on-chain field name for the companion slot), it goes into the Kami's Pet slot. You do **not** pass a slot parameter when equipping.
 - **Slot conflict handling:** If the target slot is already occupied, the existing item is **automatically unequipped** (returned to your inventory) before the new item is equipped. No need to manually unequip first.
 - **Capacity limit:** Each entity has a default equipment capacity of **1** total equipped item (across all slots), expandable via the `EQUIP_CAPACITY_SHIFT` bonus. Adding new equipment (not replacing) checks capacity — replacing an item in the same slot does not count as adding.
 - **Kami state requirement:** The Kami must be in `"RESTING"` state to equip items. Harvesting or dead Kamis cannot be equipped.
@@ -374,18 +374,20 @@ Reset all skills on a Kami (respec).
 
 | Name | Type | Description |
 |------|------|-------------|
-| `kamiID` | `uint256` | Entity ID of the Kami |
+| `targetID` | `uint256` | Entity ID of the Kami **or** Account to respec |
 
 ### Description
 
-Resets all skill points on a Kami, allowing them to be redistributed. Consumes 1 Respec Potion (item index 11403) from the account's inventory. The Kami must be in `"RESTING"` state.
+Resets all skill points on a Kami or Account, allowing them to be redistributed. Consumes 1 Respec Potion (item index 11403) from the account's inventory. The target must be in `"RESTING"` state.
+
+> **Note:** The contract parameter is `targetID` and supports both Kami and Account entity IDs. The system checks the entity type and handles ownership verification accordingly.
 
 ### Code Example
 
 ```javascript
 import { getSystem, ownerSigner, operatorSigner } from "./kamigotchi.js";
 
-const ABI = ["function executeTyped(uint256 kamiID) returns (bytes)"];
+const ABI = ["function executeTyped(uint256 targetID) returns (bytes)"];
 const system = await getSystem("system.skill.respec", ABI, operatorSigner);
 
 const tx = await system.executeTyped(kamiEntityId);
@@ -459,7 +461,7 @@ Revive a dead Kami using $ONYX.
 
 ### Description
 
-Revives a Kami that has died (health reached 0). Costs 33 $ONYX shards (item index 100). The Kami's state is set from `"DEAD"` to `"RESTING"` and health is restored to 33.
+Revives a Kami that has died (health reached 0). Costs 33 $ONYX (item index 100). The Kami's state is set from `"DEAD"` to `"RESTING"` and health is restored to 33.
 
 ### Code Example
 
@@ -476,14 +478,14 @@ console.log("Kami revived!");
 
 ### Notes
 
-- ONYX cost is 33 shards per revive. Health is restored to 33.
+- ONYX cost is 33 $ONYX per revive. Health is restored to 33.
 - Requires $ONYX approval to the system contract.
 
 ---
 
 ## onyx.respec()
 
-Respec a Kami's skills using $ONYX.
+Respec a Kami's skills using $ONYX. Costs 10,000 $ONYX.
 
 > **⚠️ Currently Disabled:** This system reverts with 'Onyx Features are temporarily disabled.' Calls will fail until re-enabled.
 

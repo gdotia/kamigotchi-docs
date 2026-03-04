@@ -183,7 +183,7 @@ await approveTx.wait();
 console.log("WETH approved:", ethers.formatEther(maxOfferSpend), "WETH");
 ```
 
-> **Note:** WETH on Yominet (`0xE1Ff...2546`) is bridged ETH via LayerZero — it's the same token used for gas. Players typically acquire WETH by wrapping their native ETH or bridging from other chains. Prefer exact/limited approvals and top up as needed.
+> **Note:** WETH on Yominet (`0xE1Ff...2546`) is bridged ETH via LayerZero — it's the same token used for gas. Players typically acquire WETH by wrapping their native ETH or bridging from other chains. See [Chain Configuration](../chain-configuration.md) for the WETH contract address and bridging details. Prefer exact/limited approvals and top up as needed.
 
 ### 1. Make a Specific Offer
 

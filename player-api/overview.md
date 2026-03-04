@@ -101,7 +101,7 @@ Kamigotchi uses two wallets per player:
 
 | Wallet | Purpose | Used For |
 |--------|---------|----------|
-| **Owner** | Primary wallet, holds NFTs | `register`, `set.name`, `set.operator`, `onyx.rename`/`onyx.respec` (when enabled), ERC721 stake/unstake, ERC20 portal, trade, item transfer, `kamimarket.buy`, `newbievendor.buy`, `auction.buy`, gacha tickets, gacha mint/reroll |
+| **Owner** | Primary wallet, holds NFTs | `register`, `set.name`, `set.operator`, `onyx.rename` (currently disabled)/`onyx.respec` (currently disabled), ERC721 stake/unstake, ERC20 portal, trade, item transfer, `kamimarket.buy`, `newbievendor.buy`, `auction.buy`, gacha tickets, gacha mint/reroll |
 | **Operator** | Delegated session wallet | move, chat, harvest, quest, craft, `set.pfp`, `set.bio`, `onyx.revive`, `kamimarket.list`, `kamimarket.offer`, `kamimarket.acceptoffer`, `kamimarket.cancel`, `kami.send`, etc. |
 
 > **Note:** The operator wallet is set during `register()` and can be changed with `set.operator()`. In the official client, Privy manages the operator wallet as an embedded wallet.
@@ -384,3 +384,5 @@ Most API snippets assume these exports are already in scope.
 | [Goals & Scavenge](goals-and-scavenge.md) | Contribute, claim |
 | [Gacha / Minting](minting.md) | Mint, reveal, reroll, tickets |
 | [Portal](portal.md) | ERC721 stake/unstake, ERC20 deposit/withdraw |
+| [Entity Discovery](entity-discovery.md) | Entity ID derivation and lookup |
+| [KamiSwap Marketplace](marketplace.md) | List, buy, offer, cancel |

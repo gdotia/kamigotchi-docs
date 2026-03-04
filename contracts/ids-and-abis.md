@@ -159,7 +159,7 @@ Kamigotchi has **65 documented player-facing systems** in the World contract. Ea
 
 | System ID | Description | Wallet | Page |
 |-----------|-------------|--------|------|
-| `system.auction.buy` | Buy from auction | Owner | — |
+| `system.auction.buy` | Buy from auction | Owner | [Listings](../player-api/listings.md) |
 
 ---
 

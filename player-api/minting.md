@@ -80,7 +80,7 @@ import { getSystem, ownerSigner, operatorSigner } from "./kamigotchi.js";
 
 // reveal() is a named function, NOT executeTyped
 const ABI = ["function reveal(uint256[] rawCommitIDs) external returns (uint256[])"];
-const system = await getSystem("system.kami.gacha.reveal", ABI, signer);
+const system = await getSystem("system.kami.gacha.reveal", ABI, operatorSigner);
 
 const commitIds = [commitId1, commitId2, commitId3];
 const tx = await system.reveal(commitIds);

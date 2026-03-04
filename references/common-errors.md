@@ -26,6 +26,8 @@ Quick reference for common Solidity revert messages across Kamigotchi systems. T
 | `"PetName: name can be at most 16 characters"` | Name exceeds 16 bytes |
 | `"PetName: name taken"` | Another Kami already uses this name |
 
+> **Note:** `PetName` is the on-chain contract name for the Kami naming system. These revert strings are immutable on-chain values.
+
 ---
 
 ## Harvest Liquidation (`system.harvest.liquidate`)
