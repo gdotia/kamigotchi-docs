@@ -14,7 +14,7 @@ Kamigotchi is deployed on **Yominet**, an Initia L2 rollup built on the OP Stack
 | **WebSocket RPC** | `wss://jsonrpc-ws-yominet-1.anvil.asia-southeast.initia.xyz` |
 | **REST API** | `https://rest-yominet-1.anvil.asia-southeast.initia.xyz` |
 | **Block Explorer** | [scan.initia.xyz/yominet-1](https://scan.initia.xyz/yominet-1) |
-| **Gas Price** | Flat `0.005 gwei` |
+| **Gas Price** | Flat `0.0025 gwei` |
 | **Native Token** | $ETH (bridged) |
 | **Currency Symbol** | ETH |
 
@@ -60,7 +60,7 @@ const provider = new ethers.JsonRpcProvider(
 
 ## Gas
 
-Yominet uses a **flat gas price** of `0.005 gwei`. This is extremely low compared to Ethereum mainnet.
+Yominet uses a **flat gas price** of `0.0025 gwei` (`2500000 wei`). This is extremely low compared to Ethereum mainnet.
 
 ```javascript
 // Gas is cheap — but some systems need hardcoded gas limits:
@@ -89,15 +89,29 @@ $ONYX is the in-game ERC-20 token used for premium operations.
 
 > **Note:** Most $ONYX operations require the **Owner wallet** — except `onyx.revive()`, which uses the **Operator wallet**.
 
+### Acquiring $ONYX
+
+- **In-game earning** — Harvesting yields $MUSU, which can be traded for $ONYX via player-to-player trades. Completing quests and crafting also generate value that feeds into $ONYX acquisition.
+- **Trading on Baseline Markets** — $ONYX can be bought and sold on [Baseline Markets](https://legacy.baseline.markets). Search for the ONYX token on Yominet.
+- **Player-to-player trading** — Use the in-game [Trading](player-api/trading.md) system to exchange items or $MUSU for $ONYX with other players.
+
 ---
 
 ## Bridging
 
-To get $ETH on Yominet for gas:
+ETH on Yominet is **bridged via LayerZero** from Ethereum mainnet. The native gas token is a wrapped ETH (WETH) token at this address:
+
+| Token | Contract Address |
+|-------|-----------------|
+| **Wrapped ETH (WETH)** | [`0xE1Ff7038eAAAF027031688E1535a055B2Bac2546`](https://scan.initia.xyz/yominet-1/address/0xE1Ff7038eAAAF027031688E1535a055B2Bac2546) |
+
+> **Note:** All gas on Yominet is paid in this bridged ETH token. When the docs refer to "$ETH on Yominet", this is the token being referenced.
+
+### Bridge Options
 
 | Bridge | URL | Notes |
 |--------|-----|-------|
-| gas.zip | [gas.zip](https://gas.zip) | Multi-chain gas bridge |
+| gas.zip | [gas.zip](https://gas.zip) | Multi-chain gas bridge — easiest way to get ETH on Yominet |
 
 ---
 

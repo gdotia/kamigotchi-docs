@@ -107,7 +107,59 @@ console.log("Account registered! Tx:", receipt.hash);
 
 ---
 
-## Step 5: Perform Basic Actions
+## Step 5: Get Your First Kami
+
+After registering, you need at least one Kami to participate in gameplay (harvesting, quests, combat). There are three ways to acquire a Kami:
+
+### Option A: Gacha Minting (Primary Path)
+
+The standard flow is: **buy a gacha ticket → mint → reveal**.
+
+```javascript
+// 1. Buy a gacha ticket (costs ETH — see minting docs for current price)
+const BUY_ABI = ["function buyPublic(uint256 amount)"];
+const buySystem = await getSystem("system.buy.gacha.ticket", BUY_ABI, ownerSigner);
+
+await (await buySystem.buyPublic(1)).wait();
+console.log("Gacha ticket purchased!");
+
+// 2. Mint — commits the randomness (consumes the ticket)
+const MINT_ABI = ["function executeTyped(uint256 amount) returns (bytes)"];
+const mintSystem = await getSystem("system.kami.gacha.mint", MINT_ABI, ownerSigner);
+
+const mintTx = await mintSystem.executeTyped(1, { gasLimit: 7_000_000 });
+const mintReceipt = await mintTx.wait();
+console.log("Mint committed!");
+
+// 3. Reveal — determines the Kami's traits (species, stats, rarity)
+// Note: there may be a minimum block delay between mint and reveal
+const REVEAL_ABI = ["function reveal(uint256[] rawCommitIDs) external returns (uint256[])"];
+const revealSystem = await getSystem("system.kami.gacha.reveal", REVEAL_ABI, ownerSigner);
+
+const revealTx = await revealSystem.reveal([commitId]);
+await revealTx.wait();
+console.log("Kami revealed!");
+```
+
+> **Pricing:** Public tickets cost 0.1 ETH each (`MINT_PRICE_PUBLIC`). Whitelist tickets cost 0.05 ETH (`MINT_PRICE_WL`). Max 222 public mints per account, 3,000 total globally. See [Gacha / Minting](player-api/minting.md) for full details.
+
+### Option B: Buy or Trade from Another Player
+
+Use the in-game [Trading](player-api/trading.md) system to acquire a Kami from another player, or purchase one on a secondary NFT marketplace.
+
+### Option C: Receive via ERC-721 Transfer + Stake
+
+If someone sends you a Kami721 NFT directly (ERC-721 transfer), you'll need to **stake** it into the game before it becomes playable:
+
+1. Approve the World contract for the NFT
+2. Move to Room 12 (Scrap Confluence / Bridge)
+3. Call `system.kami721.stake` with the token index
+
+See [Step 8: Stake a Kami NFT](#step-8-stake-a-kami-nft) for the full code example.
+
+---
+
+## Step 6: Perform Basic Actions
 
 ### Move to a Room
 
@@ -177,7 +229,7 @@ console.log("Kami leveled up!");
 
 ---
 
-## Step 6: Read Game State
+## Step 7: Read Game State
 
 ```javascript
 const GETTER_ABI = [
@@ -195,7 +247,7 @@ console.log("Kami data:", kamiData);
 
 ---
 
-## Step 7: Stake a Kami NFT
+## Step 8: Stake a Kami NFT
 
 ```javascript
 const KAMI721_ADDRESS = "0x5d4376b62fa8ac16dfabe6a9861e11c33a48c677";
@@ -319,6 +371,73 @@ main().catch(console.error);
 | `account.move()` | 1,200,000 | Rooms with gates |
 | `harvest.liquidate()` | 7,500,000 | Complex PvP logic |
 | `pet.mint(n)` | 4M + 3M × n | Scales with mint count |
+
+---
+
+## Transaction Management
+
+When building bots or automated systems that send rapid transactions, you need to manage **nonces** and **gas settings** carefully. The official Kamigotchi client uses an internal `TxQueue` that handles this — here's how to replicate the key patterns.
+
+### Gas Settings
+
+Yominet uses a flat fee model. Hardcode these values — do **not** rely on `eth_gasPrice` or EIP-1559 estimation:
+
+```javascript
+const TX_OVERRIDES = {
+  maxFeePerGas: 2500000n,       // 0.0025 gwei — Yominet's flat gas price
+  maxPriorityFeePerGas: 0n,     // No priority fee needed
+};
+
+const tx = await system.executeTyped(args, {
+  ...TX_OVERRIDES,
+  gasLimit: 1_200_000,          // Set per-system (see Gas Quick Reference)
+});
+```
+
+### Nonce Management
+
+If you send multiple transactions without waiting for each to confirm, you **must** manage nonces manually. Otherwise the RPC will reject transactions with duplicate or out-of-order nonces.
+
+```javascript
+// Fetch the current nonce once, then increment locally
+let nonce = await provider.getTransactionCount(signer.address, "pending");
+
+async function sendWithNonce(system, method, args, overrides = {}) {
+  const tx = await system[method](...args, {
+    ...TX_OVERRIDES,
+    nonce: nonce,
+    ...overrides,
+  });
+  nonce++; // Increment immediately — don't wait for confirmation
+  return tx;
+}
+```
+
+### Retry on Nonce Errors
+
+Nonce errors (`NONCE_EXPIRED`, `account sequence mismatch`, `TRANSACTION_REPLACED`) mean your local nonce drifted from the chain. Reset from the network and retry:
+
+```javascript
+async function sendWithRetry(system, method, args, overrides = {}) {
+  try {
+    return await sendWithNonce(system, method, args, overrides);
+  } catch (error) {
+    const isNonceError =
+      error?.code === "NONCE_EXPIRED" ||
+      error?.code === "TRANSACTION_REPLACED" ||
+      error?.message?.includes("account sequence");
+
+    if (isNonceError) {
+      // Reset nonce from network and retry once
+      nonce = await provider.getTransactionCount(signer.address, "pending");
+      return await sendWithNonce(system, method, args, overrides);
+    }
+    throw error;
+  }
+}
+```
+
+> **⚠️ Warning:** Sending multiple transactions without nonce management will cause failures. Always track nonces locally if you're sending faster than block confirmation time. The official client uses a mutex-protected queue with automatic nonce tracking — consider a similar pattern for production bots.
 
 ---
 

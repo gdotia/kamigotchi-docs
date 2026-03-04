@@ -67,6 +67,10 @@ Kamigotchi uses two wallets per player:
 
 > **Note:** The operator wallet is set during `register()` and can be changed with `set.operator()`. In the official client, Privy manages the operator wallet as an embedded wallet.
 
+### New Player Path
+
+After registering, new players need to acquire their first Kami before they can participate in gameplay. The primary path is **gacha minting**: buy a gacha ticket → call `pet.mint()` → call `pet.reveal()`. Alternatives include trading with other players or receiving a Kami721 NFT and staking it. See the [Integration Guide](../integration-guide.md#step-5-get-your-first-kami) for the full walkthrough.
+
 ### Determining Which Wallet to Use
 
 Each function in this documentation includes a **Wallet** badge:

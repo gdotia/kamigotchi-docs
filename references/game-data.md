@@ -17,7 +17,7 @@ Items are identified by a `uint32` index. The on-chain entity ID for an item is 
 | 1 | MUSU | Misc | Kamigotchi kurrency — the primary in-game currency |
 | 10 | Gacha Ticket | Misc | Redeemable for one Kami at the vending machine |
 | 11 | Reroll Ticket | Misc | Allows you to reroll a Kami once |
-| 100 | Onyx Shard | ERC20 | Premium game currency ($ONYX) |
+| 100 | Onyx Shard | ERC20 | Premium game currency ($ONYX) — see [Chain Configuration](../chain-configuration.md#acquiring-onyx) for how to acquire |
 
 ### Raw Materials
 

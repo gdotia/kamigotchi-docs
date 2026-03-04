@@ -141,7 +141,7 @@ await tx.wait();
 ### Notes
 
 - There is no explicit message length limit in the `ChatSystem` contract — messages are arbitrary strings. Practical limits are imposed by block gas limits. The system checks configurable requirements (via `LibConditional`) before allowing a message to be sent.
-- Messages are on-chain and public — they cost gas (minimal on Yominet, flat 0.005 gwei).
+- Messages are on-chain and public — they cost gas (minimal on Yominet, flat 0.0025 gwei).
 
 ---
 
