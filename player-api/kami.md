@@ -39,7 +39,7 @@ console.log("Kami leveled up!");
 
 ### Notes
 
-- Reverts with `"Insufficient XP"` if the Kami doesn't have enough XP for the next level.
+- Reverts with `"PetLevel: need more experience"` if the Kami doesn't have enough XP for the next level.
 - XP thresholds are calculated dynamically: `cost = BASE * MULT^(level-1)`. Production values: BASE = 40 XP (level 1→2), MULT = 1.259 (i.e. each level costs ~25.9% more than the previous). For example: level 1→2 costs 40 XP, level 2→3 costs ~50 XP, level 5→6 costs ~100 XP, and so on.
 
 ---

@@ -61,7 +61,7 @@ const levelSystemAddr = await getSystemAddress("system.kami.level");
 console.log("KamiLevelSystem:", levelSystemAddr);
 ```
 
-> For the full resolver with legacy fallback support, see the [Integration Guide](integration-guide.md).
+> For the full resolver with legacy fallback support, see the [Integration Guide](../integration-guide.md).
 
 ### Why Dynamic Resolution?
 
@@ -124,6 +124,6 @@ const kami721 = new ethers.Contract(
 
 ## Related Pages
 
-- [System IDs & ABIs](ids-and-abis.md) — All 65 system identifiers
+- [System IDs & ABIs](ids-and-abis.md) — All 67 system identifiers
 - [Chain Configuration](../chain-configuration.md) — Network details
 - [Architecture Overview](../architecture.md) — How contracts interact

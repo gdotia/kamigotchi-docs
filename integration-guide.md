@@ -242,7 +242,7 @@ console.log("First Kami purchased from the Newbie Vendor!");
 
 > **Restrictions:** One purchase per account, only within 24 hours of registration. Minimum price 0.005 ETH. The purchased Kami is soulbound for 3 days (cannot be listed or unstaked). See [KamiSwap — Marketplace](player-api/marketplace.md) for full details.
 
-> **Finding your Kami's entity ID after purchase:** After a successful vendor buy, you need the Kami's entity ID to use it in gameplay systems (harvesting, combat, etc.). The entity ID is derived as `keccak256(abi.encodePacked("kami", uint256(kamiTokenIndex)))`. You can find the `kamiTokenIndex` from the purchase transaction's events, or by querying your account's Kami list via the getter system. See [Entity Discovery](player-api/entity-discovery.md) for the full derivation helpers.
+> **Finding your Kami's entity ID after purchase:** After a successful vendor buy, you need the Kami's entity ID to use it in gameplay systems (harvesting, combat, etc.). The entity ID is derived as `keccak256(abi.encodePacked("kami.id", uint32(kamiTokenIndex)))`. You can find the `kamiTokenIndex` from the purchase transaction's events, or by querying your account's Kami list via the getter system. See [Entity Discovery](player-api/entity-discovery.md) for the full derivation helpers.
 
 ### Option B: Gacha Minting
 
@@ -572,10 +572,10 @@ async function main() {
 
   // 4. Derive the Kami entity ID
   // After purchase, query account's Kami list or parse tx events to get kamiTokenIndex.
-  // Entity ID formula: keccak256(abi.encodePacked("kami", uint256(kamiTokenIndex)))
+  // Entity ID formula: keccak256(abi.encodePacked("kami.id", uint32(kamiTokenIndex)))
   // For this example, assume kamiTokenIndex is known:
   // const kamiEntityId = BigInt(ethers.keccak256(
-  //   ethers.solidityPacked(["string", "uint256"], ["kami", kamiTokenIndex])
+  //   ethers.solidityPacked(["string", "uint32"], ["kami.id", kamiTokenIndex])
   // ));
 
   // 5. Start harvesting (operator wallet)
