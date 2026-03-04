@@ -18,8 +18,8 @@ Upgrade a Kami's skill.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `kamiID` | `uint256` | Entity ID of the Kami |
-| `skillIndex` | `uint256` | Index of the skill to upgrade |
+| `kamiID` | `uint256` | Entity ID of the Kami (contract parameter is `holderID`) |
+| `skillIndex` | `uint32` | Index of the skill to upgrade |
 
 ### Description
 
@@ -31,7 +31,7 @@ Upgrades a specific skill on a Kami. Skills provide passive or active bonuses du
 import { getSystem } from "./kamigotchi.js";
 
 const ABI = [
-  "function executeTyped(uint256 kamiID, uint256 skillIndex) returns (bytes)",
+  "function executeTyped(uint256 kamiID, uint32 skillIndex) returns (bytes)",
 ];
 const system = await getSystem("system.skill.upgrade", ABI, operatorSigner);
 
@@ -102,12 +102,12 @@ Advance a relationship with an NPC.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `npcIndex` | `uint256` | Index of the NPC |
-| `stateIndex` | `uint256` | Target relationship state to advance to |
+| `npcIndex` | `uint32` | Index of the NPC |
+| `relIndex` | `uint32` | Target relationship flag index to advance to |
 
 ### Description
 
-Advances the player's relationship with an NPC to the next level. NPCs have multiple relationship states (e.g., stranger → acquaintance → friend → ally). Higher relationship levels may unlock:
+Advances the player's relationship with an NPC to the next level. NPCs have multiple relationship flags (e.g., stranger → acquaintance → friend → ally). Higher relationship levels may unlock:
 
 - Better merchant prices
 - Exclusive quests
@@ -120,11 +120,11 @@ Advances the player's relationship with an NPC to the next level. NPCs have mult
 import { getSystem } from "./kamigotchi.js";
 
 const ABI = [
-  "function executeTyped(uint256 npcIndex, uint256 stateIndex) returns (bytes)",
+  "function executeTyped(uint32 npcIndex, uint32 relIndex) returns (bytes)",
 ];
 const system = await getSystem("system.relationship.advance", ABI, operatorSigner);
 
-const tx = await system.executeTyped(npcIndex, targetRelationshipState);
+const tx = await system.executeTyped(npcIndex, targetRelationshipFlag);
 await tx.wait();
 console.log("NPC relationship advanced!");
 ```
@@ -133,7 +133,7 @@ console.log("NPC relationship advanced!");
 
 - Advancing may require specific items, quest completions, or other prerequisites.
 - NPC indices and relationship flags are defined in the relationship registry. Relationships use a dual-key system `(npcIndex, relIndex)`. Advancement is controlled by whitelist/blacklist arrays on each registry entry — having a blacklisted flag prevents advancement, while having a whitelisted flag (or empty whitelist) allows it. The NPC and player must be in the same room.
-- The `stateIndex` must be the **next valid state** — skipping states will revert.
+- The `relIndex` must be a valid flag that the account doesn't already have — duplicate flags will revert.
 - Not all NPCs support relationship advancement.
 
 ---

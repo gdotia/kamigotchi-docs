@@ -18,9 +18,9 @@ Buy items from an NPC merchant.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `merchantIndex` | `uint256` | Index of the NPC merchant |
-| `itemIndices` | `uint256[]` | Array of item indices in the merchant's inventory |
-| `amts` | `uint256[]` | Array of amounts to buy for each item |
+| `merchantIndex` | `uint32` | Index of the NPC merchant |
+| `itemIndices` | `uint32[]` | Array of item indices in the merchant's inventory |
+| `amts` | `uint32[]` | Array of amounts to buy for each item |
 
 ### Description
 
@@ -32,7 +32,7 @@ Purchases items from an NPC merchant's inventory. The cost is deducted from the 
 import { getSystem } from "./kamigotchi.js";
 
 const ABI = [
-  "function executeTyped(uint256 merchantIndex, uint256[] itemIndices, uint256[] amts) returns (bytes)",
+  "function executeTyped(uint32 merchantIndex, uint32[] itemIndices, uint32[] amts) returns (bytes)",
 ];
 const system = await getSystem("system.listing.buy", ABI, operatorSigner);
 
@@ -65,9 +65,9 @@ Sell items to an NPC merchant.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `merchantIndex` | `uint256` | Index of the NPC merchant |
-| `itemIndices` | `uint256[]` | Array of item indices from the player's inventory |
-| `amts` | `uint256[]` | Array of amounts to sell for each item |
+| `merchantIndex` | `uint32` | Index of the NPC merchant |
+| `itemIndices` | `uint32[]` | Array of item indices from the player's inventory |
+| `amts` | `uint32[]` | Array of amounts to sell for each item |
 
 ### Description
 
@@ -79,7 +79,7 @@ Sells items from the player's inventory to an NPC merchant. The merchant pays th
 import { getSystem } from "./kamigotchi.js";
 
 const ABI = [
-  "function executeTyped(uint256 merchantIndex, uint256[] itemIndices, uint256[] amts) returns (bytes)",
+  "function executeTyped(uint32 merchantIndex, uint32[] itemIndices, uint32[] amts) returns (bytes)",
 ];
 const system = await getSystem("system.listing.sell", ABI, operatorSigner);
 
@@ -108,15 +108,15 @@ Buy items from the auction house.
 | Property | Value |
 |----------|-------|
 | **System ID** | `system.auction.buy` |
-| **Wallet** | 🎮 Operator |
+| **Wallet** | 🔐 Owner |
 | **Gas** | Default |
 
 #### Parameters
 
 | Name | Type | Description |
 |------|------|-------------|
-| `itemIndex` | `uint256` | Index of the auction item |
-| `amt` | `uint256` | Amount to buy |
+| `itemIndex` | `uint32` | Index of the auction item |
+| `amt` | `uint32` | Amount to buy |
 
 #### Code Example
 
@@ -124,9 +124,9 @@ Buy items from the auction house.
 import { getSystem } from "./kamigotchi.js";
 
 const ABI = [
-  "function executeTyped(uint256 itemIndex, uint256 amt) returns (bytes)",
+  "function executeTyped(uint32 itemIndex, uint32 amt) returns (bytes)",
 ];
-const system = await getSystem("system.auction.buy", ABI, operatorSigner);
+const system = await getSystem("system.auction.buy", ABI, ownerSigner);
 
 const tx = await system.executeTyped(auctionItemIndex, 1);
 await tx.wait();

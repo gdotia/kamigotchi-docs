@@ -208,7 +208,7 @@ const kami721 = new ethers.Contract(
 await (await kami721.approve(WORLD_ADDRESS, tokenId)).wait();
 
 // Stake into game
-const STAKE_ABI = ["function executeTyped(uint256 index) returns (bytes)"];
+const STAKE_ABI = ["function executeTyped(uint32 tokenIndex) returns (bytes)"];
 const stakeSystem = await getSystem(
   "system.kami721.stake",
   STAKE_ABI,
@@ -325,7 +325,7 @@ main().catch(console.error);
 ```
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
 │ Owner Wallet │     │   World      │     │  Components  │
-│ (register,   │────▶│  (router)    │────▶│  (state)     │
+│ (register,   │────▶│  (registry)  │────▶│  (state)     │
 │  NFTs, ONYX) │     │              │     │              │
 └──────────────┘     │  ┌────────┐  │     │ Health       │
                      │  │System A│  │     │ Power        │

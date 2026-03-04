@@ -15,7 +15,7 @@ Kamigotchi has **55 registered systems** in the World contract. Each system is i
 | `system.account.set.bio` | Set account bio | Operator | [Account](../player-api/account.md) |
 | `system.account.set.name` | Rename account | Owner | [Account](../player-api/account.md) |
 | `system.account.set.operator` | Update operator wallet | Owner | [Account](../player-api/account.md) |
-| `system.account.set.pfp` | Set profile picture | Owner | [Account](../player-api/account.md) |
+| `system.account.set.pfp` | Set profile picture | Operator | [Account](../player-api/account.md) |
 | `system.account.use.item` | Use item from inventory | Operator | [Items](../player-api/items-and-crafting.md) |
 
 ### Chat
@@ -44,7 +44,7 @@ Kamigotchi has **55 registered systems** in the World contract. Each system is i
 | `system.kami.sacrifice.commit` | Sacrifice Kami | Operator | [Kami](../player-api/kami.md) |
 | `system.kami.sacrifice.reveal` | Reveal sacrifice loot | Operator | [Kami](../player-api/kami.md) |
 | `system.kami.onyx.rename` | Rename Kami via ONYX | Owner | [Kami](../player-api/kami.md) |
-| `system.kami.onyx.revive` | Revive dead Kami via ONYX | Owner | [Kami](../player-api/kami.md) |
+| `system.kami.onyx.revive` | Revive dead Kami via ONYX | Operator | [Kami](../player-api/kami.md) |
 | `system.kami.onyx.respec` | Respec Kami via ONYX | Owner | [Kami](../player-api/kami.md) |
 
 ### Skill Systems
@@ -68,7 +68,7 @@ Kamigotchi has **55 registered systems** in the World contract. Each system is i
 | System ID | Description | Wallet | Page |
 |-----------|-------------|--------|------|
 | `system.item.burn` | Burn items | Operator | [Items](../player-api/items-and-crafting.md) |
-| `system.item.transfer` | Transfer items | Operator | [Items](../player-api/items-and-crafting.md) |
+| `system.item.transfer` | Transfer items | Owner | [Items](../player-api/items-and-crafting.md) |
 | `system.craft` | Craft item from recipe | Operator | [Items](../player-api/items-and-crafting.md) |
 | `system.droptable.item.reveal` | Reveal droptable items | Operator | [Items](../player-api/items-and-crafting.md) |
 
@@ -78,15 +78,16 @@ Kamigotchi has **55 registered systems** in the World contract. Each system is i
 |-----------|-------------|--------|------|
 | `system.quest.accept` | Accept a quest | Operator | [Quests](../player-api/quests.md) |
 | `system.quest.complete` | Complete a quest | Operator | [Quests](../player-api/quests.md) |
+| `system.quest.drop` | Drop an active quest | Operator | [Quests](../player-api/quests.md) |
 
 ### Trade Systems
 
 | System ID | Description | Wallet | Page |
 |-----------|-------------|--------|------|
-| `system.trade.create` | Create a trade | Operator | [Trading](../player-api/trading.md) |
-| `system.trade.execute` | Execute a trade (taker) | Operator | [Trading](../player-api/trading.md) |
-| `system.trade.complete` | Complete a trade (maker) | Operator | [Trading](../player-api/trading.md) |
-| `system.trade.cancel` | Cancel a trade (maker) | Operator | [Trading](../player-api/trading.md) |
+| `system.trade.create` | Create a trade | Owner | [Trading](../player-api/trading.md) |
+| `system.trade.execute` | Execute a trade (taker) | Owner | [Trading](../player-api/trading.md) |
+| `system.trade.complete` | Complete a trade (maker) | Owner | [Trading](../player-api/trading.md) |
+| `system.trade.cancel` | Cancel a trade (maker) | Owner | [Trading](../player-api/trading.md) |
 
 ### Social / Friend Systems
 
@@ -108,10 +109,16 @@ Kamigotchi has **55 registered systems** in the World contract. Each system is i
 
 | System ID | Description | Wallet | Page |
 |-----------|-------------|--------|------|
-| `system.kami.gacha.mint` | Mint Kami with gacha ticket | Operator | [Minting](../player-api/minting.md) |
-| `system.kami.gacha.reveal` | Reveal minted Kami | Operator | [Minting](../player-api/minting.md) |
-| `system.kami.gacha.reroll` | Reroll Kami | Operator | [Minting](../player-api/minting.md) |
-| `system.buy.gacha.ticket` | Buy gacha tickets | Operator | [Minting](../player-api/minting.md) |
+| `system.kami.gacha.mint` | Mint Kami with gacha ticket | Owner | [Minting](../player-api/minting.md) |
+| `system.kami.gacha.reveal` | Reveal minted Kami | N/A | [Minting](../player-api/minting.md) |
+| `system.kami.gacha.reroll` | Reroll Kami | Owner | [Minting](../player-api/minting.md) |
+| `system.buy.gacha.ticket` | Buy gacha tickets | Owner | [Minting](../player-api/minting.md) |
+
+### Getter / View Systems
+
+| System ID | Description | Wallet | Page |
+|-----------|-------------|--------|------|
+| `system.getter` | Read-only view system (getKami, getAccount, etc.) | N/A | [Getter System](#getter-system) |
 
 ### Portal Systems
 
@@ -140,7 +147,7 @@ Kamigotchi has **55 registered systems** in the World contract. Each system is i
 
 | System ID | Description | Wallet | Page |
 |-----------|-------------|--------|------|
-| `system.auction.buy` | Buy from auction | Owner | `function executeTyped(uint32 itemIndex, uint32 amt)` |
+| `system.auction.buy` | Buy from auction | Owner | — |
 
 ---
 
@@ -198,27 +205,75 @@ const SYSTEM_ABI = [
 
 > **Note:** The `executeTyped()` signature differs per system. Refer to individual [Player API](../player-api/overview.md) pages for exact typed signatures.
 
+### Non-Standard Entry Points
+
+Most systems use `executeTyped(...)` as their typed entry point. However, some systems expose **custom function names** instead:
+
+| System | Entry Point | Signature |
+|--------|-------------|-----------|
+| `system.auction.buy` | `executeTyped` | `function executeTyped(uint32 itemIndex, uint32 amt) returns (bytes)` |
+| `system.kami.gacha.reveal` | `reveal` | `function reveal(uint256[] memory rawCommitIDs) external returns (uint256[])` |
+| `system.getter` | `getKami` / `getAccount` / `getKamiByIndex` | View functions — see [Getter System](#getter-system) below |
+
+> When integrating, always check the actual Solidity source for the correct function name if `executeTyped()` reverts with "not implemented".
+
 ---
 
 ## Getter System
 
-The **GetterSystem** provides read-only view functions (no gas required):
+The **GetterSystem** (`system.getter`, ID = `keccak256("system.getter")`) provides read-only view functions (no gas required):
 
 ```javascript
 const GETTER_ABI = [
-  "function getKami(uint256 kamiId) view returns (tuple)",
-  "function getAccount(uint256 accountId) view returns (tuple)",
+  "function getKami(uint256 kamiId) view returns (tuple(uint256 id, uint32 index, string name, string mediaURI, tuple(tuple(int32 base, int32 shift, int32 boost, int32 sync) health, tuple(int32 base, int32 shift, int32 boost, int32 sync) power, tuple(int32 base, int32 shift, int32 boost, int32 sync) harmony, tuple(int32 base, int32 shift, int32 boost, int32 sync) violence) stats, tuple(uint32 face, uint32 hand, uint32 body, uint32 background, uint32 color) traits, string[] affinities, uint256 account, uint256 level, uint256 xp, uint32 room, string state))",
+  "function getAccount(uint256 accountId) view returns (tuple(uint32 index, string name, int32 currStamina, uint32 room))",
+  "function getKamiByIndex(uint32 index) view returns (tuple(uint256 id, uint32 index, string name, string mediaURI, tuple(tuple(int32 base, int32 shift, int32 boost, int32 sync) health, tuple(int32 base, int32 shift, int32 boost, int32 sync) power, tuple(int32 base, int32 shift, int32 boost, int32 sync) harmony, tuple(int32 base, int32 shift, int32 boost, int32 sync) violence) stats, tuple(uint32 face, uint32 hand, uint32 body, uint32 background, uint32 color) traits, string[] affinities, uint256 account, uint256 level, uint256 xp, uint32 room, string state))",
 ];
 
 // Resolve GetterSystem address first, then call
-const getterAddr = await getSystemAddress("system.getter"); // ID = keccak256("system.getter")
+const getterAddr = await getSystemAddress("system.getter");
 const getter = new ethers.Contract(getterAddr, GETTER_ABI, provider);
 
 const kamiData = await getter.getKami(kamiEntityId);
 const accountData = await getter.getAccount(accountEntityId);
+const kamiByIdx = await getter.getKamiByIndex(42);
 ```
 
-> **Note:** The GetterSystem ID is `keccak256("system.getter")`. `getKami(uint256)` returns a `KamiShape` struct: `(uint256 id, uint32 index, string name, string mediaURI, KamiStats stats, KamiTraits traits, string[] affinities, uint256 account, uint256 level, uint256 xp, uint32 room, string state)` where `KamiStats = (Stat health, Stat power, Stat harmony, Stat violence)` and `KamiTraits = (uint32 face, uint32 hand, uint32 body, uint32 background, uint32 color)`. `getAccount(uint256)` returns an `AccountShape` struct: `(uint32 index, string name, int32 currStamina, uint32 room)`. There is also `getKamiByIndex(uint32)` which looks up by index.
+### Return Type Reference
+
+**`getKami(uint256)` / `getKamiByIndex(uint32)`** → `KamiShape`:
+
+```solidity
+struct KamiShape {
+  uint256 id;
+  uint32 index;
+  string name;
+  string mediaURI;
+  KamiStats stats;    // (Stat health, Stat power, Stat harmony, Stat violence)
+  KamiTraits traits;  // (uint32 face, uint32 hand, uint32 body, uint32 background, uint32 color)
+  string[] affinities;
+  uint256 account;
+  uint256 level;
+  uint256 xp;
+  uint32 room;
+  string state;
+}
+
+struct Stat { int32 base; int32 shift; int32 boost; int32 sync; }
+```
+
+**`getAccount(uint256)`** → `AccountShape`:
+
+```solidity
+struct AccountShape {
+  uint32 index;
+  string name;
+  int32 currStamina;
+  uint32 room;
+}
+```
+
+> **Note:** `getKamiByIndex(uint32)` looks up a Kami by its token index rather than entity ID. The `execute(bytes)` function on GetterSystem is not implemented and will revert — use the named view functions directly.
 
 ---
 

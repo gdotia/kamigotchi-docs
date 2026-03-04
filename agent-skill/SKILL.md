@@ -10,6 +10,8 @@ Play Kamigotchi — an onchain idle-MMORPG on Yominet. Manage Kamis (pets), harv
 
 All game interactions go through a local REST API server (`kami-api` at `localhost:3008`) that wraps smart contract calls.
 
+> **Note:** `kami-api` is a separate REST wrapper service (not part of the core Kamigotchi codebase). It must be running independently on port 3008 before any game interactions can be performed. See Quick Start below for setup instructions.
+
 ## Quick Start
 
 1. Ensure kami-api is running on port 3008:

@@ -18,14 +18,18 @@ Start harvesting at a node.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `kamiIDs` | `uint256[]` | Array of Kami entity IDs to assign to the harvest |
-| `nodeIndex` | `uint256` | Index of the harvest node in the current room |
+| `kamiID` | `uint256` | Entity ID of the Kami to assign to the harvest |
+| `nodeIndex` | `uint32` | Index of the harvest node in the current room |
+| `taxerID` | `uint256` | Taxer entity ID (pass `0` for player-initiated harvests) |
+| `taxAmt` | `uint256` | Tax amount (pass `0` for player-initiated harvests) |
 
 ### Description
 
-Assigns one or more Kamis to a harvest node. Supports batching — multiple Kamis can be sent to the same node in a single transaction. Internally passes `0, 0` for `taxerID` and `taxAmt` (no taxation on player-initiated harvests).
+Assigns a Kami to a harvest node. For player-initiated harvests, pass `0, 0` for the `taxerID` and `taxAmt` parameters (taxation is for system-level use).
 
 Kamis must be in the same room as the harvest node and not already harvesting elsewhere.
+
+For batching multiple Kamis to the same node, use `executeBatched()` (see below).
 
 ### Code Example
 
@@ -33,14 +37,24 @@ Kamis must be in the same room as the harvest node and not already harvesting el
 import { getSystem } from "./kamigotchi.js";
 
 const ABI = [
-  "function executeTyped(uint256[] kamiIDs, uint256 nodeIndex) returns (bytes)",
+  "function executeTyped(uint256 kamiID, uint32 nodeIndex, uint256 taxerID, uint256 taxAmt) returns (bytes)",
+  "function executeBatched(uint256[] kamiIDs, uint32 nodeIndex, uint256 taxerID, uint256 taxAmt)",
 ];
 const system = await getSystem("system.harvest.start", ABI, operatorSigner);
 
-const kamiIds = [kamiId1, kamiId2, kamiId3];
-const tx = await system.executeTyped(kamiIds, harvestNodeIndex);
+// Single Kami
+const tx = await system.executeTyped(kamiId, harvestNodeIndex, 0, 0);
 await tx.wait();
-console.log("Harvesting started for", kamiIds.length, "Kamis");
+console.log("Harvesting started for Kami");
+
+// Batch — multiple Kamis on the same node
+const txBatch = await system.executeBatched(
+  [kamiId1, kamiId2, kamiId3],
+  harvestNodeIndex,
+  0, 0
+);
+await txBatch.wait();
+console.log("Harvesting started for 3 Kamis");
 ```
 
 ### Notes
@@ -48,6 +62,7 @@ console.log("Harvesting started for", kamiIds.length, "Kamis");
 - Kamis already assigned to a harvest will cause the transaction to revert.
 - Each harvest node has a maximum capacity — check room data for availability.
 - Move to the room first with [account.move()](account.md#move) before starting a harvest.
+- **Batch variant:** `executeBatched(uint256[] kamiIDs, uint32 nodeIndex, uint256 taxerID, uint256 taxAmt)` starts harvests for multiple Kamis in one transaction.
 
 ---
 
@@ -65,30 +80,40 @@ Stop active harvests.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `harvestIDs` | `uint256[]` | Array of harvest entity IDs to stop |
+| `id` | `uint256` | Harvest entity ID to stop |
 
 ### Description
 
-Stops one or more active harvests. The Kamis are released and can be reassigned. Any uncollected rewards remain available for collection.
+Stops a single active harvest. The Kami is released and can be reassigned. Any uncollected rewards are collected automatically (collect-and-stop).
+
+For batch stopping, use `executeBatched()` (see below).
 
 ### Code Example
 
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
-const ABI = ["function executeTyped(uint256[] harvestIDs) returns (bytes)"];
+const ABI = [
+  "function executeTyped(uint256 id) returns (bytes)",
+  "function executeBatched(uint256[] ids) returns (bytes[])",
+];
 const system = await getSystem("system.harvest.stop", ABI, operatorSigner);
 
-const harvestIds = [harvestId1, harvestId2];
-const tx = await system.executeTyped(harvestIds);
+// Single harvest
+const tx = await system.executeTyped(harvestId);
 await tx.wait();
+console.log("Harvest stopped");
+
+// Batch — multiple harvests
+const txBatch = await system.executeBatched([harvestId1, harvestId2]);
+await txBatch.wait();
 console.log("Harvests stopped");
 ```
 
 ### Notes
 
-- Stopping a harvest does NOT automatically collect rewards — call `harvest.collect()` separately.
-- Batch stopping is more gas-efficient than stopping one by one.
+- Stopping a harvest collects rewards automatically.
+- **Batch variant:** `executeBatched(uint256[] ids)` stops multiple harvests in one transaction — more gas-efficient than stopping one by one.
 
 ---
 
@@ -106,30 +131,40 @@ Collect rewards from harvests.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `harvestIDs` | `uint256[]` | Array of harvest entity IDs to collect from |
+| `id` | `uint256` | Harvest entity ID to collect from |
 
 ### Description
 
-Collects accumulated rewards (items, XP) from one or more harvests. Can be called while the harvest is still active (partial collection) or after stopping.
+Collects accumulated rewards (items, XP) from a single harvest. Can be called while the harvest is still active (partial collection) or after stopping.
+
+For batch collecting, use `executeBatched()` (see below).
 
 ### Code Example
 
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
-const ABI = ["function executeTyped(uint256[] harvestIDs) returns (bytes)"];
+const ABI = [
+  "function executeTyped(uint256 id) returns (bytes)",
+  "function executeBatched(uint256[] ids) returns (bytes[])",
+];
 const system = await getSystem("system.harvest.collect", ABI, operatorSigner);
 
-const harvestIds = [harvestId1, harvestId2, harvestId3];
-const tx = await system.executeTyped(harvestIds);
+// Single harvest
+const tx = await system.executeTyped(harvestId);
 await tx.wait();
 console.log("Rewards collected!");
+
+// Batch — multiple harvests
+const txBatch = await system.executeBatched([harvestId1, harvestId2, harvestId3]);
+await txBatch.wait();
+console.log("All rewards collected!");
 ```
 
 ### Notes
 
 - Rewards accumulate over time — collecting early is fine but yields less.
-- Batch collecting is more gas-efficient.
+- **Batch variant:** `executeBatched(uint256[] ids)` collects from multiple harvests in one transaction — more gas-efficient.
 
 ---
 
@@ -147,8 +182,8 @@ Liquidate another player's harvest.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `harvestID` | `uint256` | Entity ID of the harvest to liquidate |
-| `kamiID` | `uint256` | Entity ID of the Kami performing the liquidation |
+| `victimHarvID` | `uint256` | Entity ID of the victim's harvest to liquidate |
+| `killerID` | `uint256` | Entity ID of your Kami performing the liquidation |
 
 ### Description
 
@@ -160,7 +195,7 @@ Uses your Kami to liquidate another player's harvest. This is a competitive PvP 
 import { getSystem } from "./kamigotchi.js";
 
 const ABI = [
-  "function executeTyped(uint256 harvestID, uint256 kamiID) returns (bytes)",
+  "function executeTyped(uint256 victimHarvID, uint256 killerID) returns (bytes)",
 ];
 const system = await getSystem("system.harvest.liquidate", ABI, operatorSigner);
 

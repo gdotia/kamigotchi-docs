@@ -1,5 +1,7 @@
 # Kamigotchi API Reference
 
+> **Note:** This REST API is a convenience wrapper around on-chain smart contract calls to the Kamigotchi World contract. Every write endpoint submits a transaction to the blockchain. For contract-level parameters, function signatures, and ABI details, see the [Player API docs](../../player-api/overview.md) and [System IDs & ABIs](../../contracts/ids-and-abis.md).
+
 Base URL: `http://localhost:3008`
 
 All write endpoints require `KAMI_PRIVATE_KEY` in `kami-api/.env`.

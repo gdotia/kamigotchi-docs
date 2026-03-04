@@ -66,7 +66,7 @@ Move the account to a different room.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `roomIndex` | `uint256` | Index of the target room |
+| `roomIndex` | `uint32` | Index of the target room |
 
 ### Description
 
@@ -77,7 +77,7 @@ Moves the player's account to the specified room. Rooms contain harvest nodes, N
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
-const ABI = ["function executeTyped(uint256 roomIndex) returns (bytes)"];
+const ABI = ["function executeTyped(uint32 roomIndex) returns (bytes)"];
 const system = await getSystem("system.account.move", ABI, operatorSigner);
 
 const tx = await system.executeTyped(targetRoomIndex, {
@@ -174,7 +174,7 @@ Set profile picture to an owned Kami.
 | Property | Value |
 |----------|-------|
 | **System ID** | `system.account.set.pfp` |
-| **Wallet** | 🔐 Owner |
+| **Wallet** | 🎮 Operator |
 | **Gas** | Default |
 
 ### Parameters
@@ -185,16 +185,15 @@ Set profile picture to an owned Kami.
 
 ### Description
 
-Sets the player's profile picture to the visual of a Kami they own. Must be called from the owner wallet.
+Sets the player's profile picture to the visual of a Kami they own.
 
 ### Code Example
 
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
-// Must use OWNER wallet
 const ABI = ["function executeTyped(uint256 kamiID) returns (bytes)"];
-const system = await getSystem("system.account.set.pfp", ABI, ownerSigner);
+const system = await getSystem("system.account.set.pfp", ABI, operatorSigner);
 
 const tx = await system.executeTyped(favoriteKamiId);
 await tx.wait();

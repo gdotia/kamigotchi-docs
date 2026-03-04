@@ -64,9 +64,9 @@ Yominet uses a **flat gas price** of `0.005 gwei`. This is extremely low compare
 
 ```javascript
 // Gas is cheap — but some systems need hardcoded gas limits:
-// - account.move():        1,200,000 gas (rooms with gates)
-// - harvest.liquidate():   7,500,000 gas
-// - pet.mint():            4,000,000 + 3,000,000 per pet
+// - account.move() (system.account.move):              1,200,000 gas (rooms with gates)
+// - harvest.liquidate() (system.harvest.liquidate):     7,500,000 gas
+// - pet.mint() (system.kami.gacha.mint):                4,000,000 + 3,000,000 per pet
 ```
 
 > **Note:** Always set appropriate gas limits for high-compute operations. The flat gas price means cost is minimal, but gas **limits** still matter for complex system calls.

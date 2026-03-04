@@ -62,8 +62,8 @@ Kamigotchi uses two wallets per player:
 
 | Wallet | Purpose | Used For |
 |--------|---------|----------|
-| **Owner** | Primary wallet, holds NFTs | `register`, `set.name`, `set.pfp`, `set.operator`, all `onyx.*`, ERC721 stake/unstake |
-| **Operator** | Delegated session wallet | Everything else — move, chat, harvest, trade, quest, craft, etc. |
+| **Owner** | Primary wallet, holds NFTs | `register`, `set.name`, `set.operator`, all `onyx.*` (except `onyx.revive`), ERC721 stake/unstake, ERC20 portal, trade, item transfer, auction buy, gacha tickets, gacha mint/reroll |
+| **Operator** | Delegated session wallet | Everything else — move, chat, harvest, quest, craft, `set.pfp`, `set.bio`, `onyx.revive`, etc. |
 
 > **Note:** The operator wallet is set during `register()` and can be changed with `set.operator()`. In the official client, Privy manages the operator wallet as an embedded wallet.
 

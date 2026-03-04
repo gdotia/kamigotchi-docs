@@ -57,3 +57,15 @@ This documentation covers the smart contract architecture, chain configuration, 
 | Game | [kamigotchi.io](https://kamigotchi.io) |
 | Block Explorer | [scan.initia.xyz/yominet-1](https://scan.initia.xyz/yominet-1) |
 | World Contract | [`0x2729174c265dbBd8416C6449E0E813E88f43D0E7`](https://scan.initia.xyz/yominet-1/address/0x2729174c265dbBd8416C6449E0E813E88f43D0E7) |
+
+---
+
+## 📋 Glossary
+
+| Term | Description |
+|------|-------------|
+| **Entity ID** (`uint256`) | A large numeric identifier for any game object (Kami, account, item, room, etc.). Generated deterministically via hashing. |
+| **Index** (`uint32`) | A small positional index within a list (e.g., Kami index in an account, item index in the registry, room index in the world). |
+| **Owner Wallet** | The player's primary wallet that holds NFTs and has admin privileges (register account, spend $ONYX, stake/unstake). |
+| **Operator Wallet** | A delegated wallet for routine gameplay actions (move, harvest, equip, quest). Set via `system.account.set.operator`. |
+| **System ID** | A human-readable string identifier for a game system (e.g., `system.kami.level`, `system.harvest.start`). Hashed with `keccak256` for on-chain lookup in the World contract. |

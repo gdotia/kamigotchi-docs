@@ -13,7 +13,7 @@ Kamigotchi uses the MUD Entity Component System (ECS) framework on Yominet.
 
 All game actions are system calls to the World contract. The kami-api wraps these into REST endpoints.
 
-## System IDs (55 total)
+## System IDs (56 total)
 
 ### Account (7)
 | System ID | Description |
@@ -26,7 +26,7 @@ All game actions are system calls to the World contract. The kami-api wraps thes
 | `system.account.set.pfp` | Set profile picture |
 | `system.account.use.item` | Use item at account level |
 
-### Kami (12)
+### Kami (11)
 | System ID | Description |
 |-----------|-------------|
 | `system.kami.level` | Level up a Kami |
@@ -63,7 +63,7 @@ All game actions are system calls to the World contract. The kami-api wraps thes
 | `system.harvest.start` | Start harvesting at node |
 | `system.harvest.stop` | Stop active harvest |
 | `system.harvest.collect` | Collect harvest rewards |
-| `system.harvest.liquidate` | Liquidate harvest for instant payout |
+| `system.harvest.liquidate` | Liquidate another player's harvest (PvP attack) |
 
 ### Skills (2)
 | System ID | Description |
@@ -100,17 +100,17 @@ All game actions are system calls to the World contract. The kami-api wraps thes
 | `system.listing.buy` | Buy from merchant listing |
 | `system.listing.sell` | Sell to merchant listing |
 
-### Crafting (2)
+### Crafting (1)
 | System ID | Description |
 |-----------|-------------|
 | `system.craft` | Craft item from recipe |
-| `system.droptable.item.reveal` | Reveal crafted droptable item |
 
-### Items (2)
+### Items (3)
 | System ID | Description |
 |-----------|-------------|
 | `system.item.burn` | Burn/destroy item |
 | `system.item.transfer` | Transfer item to another player |
+| `system.droptable.item.reveal` | Reveal pending droptable items |
 
 ### Goals (2)
 | System ID | Description |
@@ -121,12 +121,12 @@ All game actions are system calls to the World contract. The kami-api wraps thes
 ### Scavenge (1)
 | System ID | Description |
 |-----------|-------------|
-| `system.scavenge.claim` | Scavenge current room |
+| `system.scavenge.claim` | Claim accumulated scavenge points |
 
 ### Relationships (1)
 | System ID | Description |
 |-----------|-------------|
-| `system.relationship.advance` | Advance Kami relationship |
+| `system.relationship.advance` | Advance NPC relationship |
 
 ### Auctions (1)
 | System ID | Description |

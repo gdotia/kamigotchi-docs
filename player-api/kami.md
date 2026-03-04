@@ -98,7 +98,7 @@ Sacrifice a Kami to receive a petpet.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `kamiIndex` | `uint256` | Index of the Kami in the account's Kami list |
+| `kamiIndex` | `uint32` | Index of the Kami in the account's Kami list |
 
 ### Description
 
@@ -109,7 +109,7 @@ Commits a Kami to the sacrifice process. The Kami is consumed, and a commit ID i
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
-const ABI = ["function executeTyped(uint256 kamiIndex) returns (bytes)"];
+const ABI = ["function executeTyped(uint32 kamiIndex) returns (uint256)"];
 const system = await getSystem("system.kami.sacrifice.commit", ABI, operatorSigner);
 
 const tx = await system.executeTyped(kamiIndex);
@@ -135,24 +135,31 @@ Reveal loot from a committed sacrifice.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `commitIDs` | `uint256[]` | Array of commit IDs from `sacrificeCommit()` |
+| `commitID` | `uint256` | Commit ID from `sacrificeCommit()` |
 
 ### Description
 
-Reveals the loot/petpet generated from one or more sacrifice commits. Supports batched reveals.
+Reveals the loot/petpet generated from a sacrifice commit. For batch reveals, use `executeTypedBatch()`.
 
 ### Code Example
 
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
-const ABI = ["function executeTyped(uint256[] commitIDs) returns (bytes)"];
+const ABI = [
+  "function executeTyped(uint256 commitID)",
+  "function executeTypedBatch(uint256[] commitIDs)",
+];
 const system = await getSystem("system.kami.sacrifice.reveal", ABI, operatorSigner);
 
-const commitIds = [commitId1, commitId2];
-const tx = await system.executeTyped(commitIds);
+// Single reveal
+const tx = await system.executeTyped(commitId);
 await tx.wait();
 console.log("Sacrifice loot revealed!");
+
+// Batch reveal
+const txBatch = await system.executeTypedBatch([commitId1, commitId2]);
+await txBatch.wait();
 ```
 
 ---
@@ -172,7 +179,7 @@ Equip an item to a Kami.
 | Name | Type | Description |
 |------|------|-------------|
 | `kamiID` | `uint256` | Entity ID of the Kami |
-| `itemIndex` | `uint256` | Index of the item in inventory |
+| `itemIndex` | `uint32` | Index of the item in inventory |
 
 ### Description
 
@@ -183,7 +190,7 @@ Equips an item from the player's inventory onto the specified Kami. The item is 
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
-const ABI = ["function executeTyped(uint256 kamiID, uint256 itemIndex) returns (bytes)"];
+const ABI = ["function executeTyped(uint256 kamiID, uint32 itemIndex) returns (uint256)"];
 const system = await getSystem("system.kami.equip", ABI, operatorSigner);
 
 const tx = await system.executeTyped(kamiEntityId, itemIndex);
@@ -251,7 +258,7 @@ Use an item on a Kami (e.g., feed).
 | Name | Type | Description |
 |------|------|-------------|
 | `kamiID` | `uint256` | Entity ID of the Kami |
-| `itemIndex` | `uint256` | Index of the item in inventory |
+| `itemIndex` | `uint32` | Index of the item in inventory |
 
 ### Description
 
@@ -262,7 +269,7 @@ Uses a consumable item on a Kami. Common use cases include feeding (restoring he
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
-const ABI = ["function executeTyped(uint256 kamiID, uint256 itemIndex) returns (bytes)"];
+const ABI = ["function executeTyped(uint256 kamiID, uint32 itemIndex) returns (bytes)"];
 const system = await getSystem("system.kami.use.item", ABI, operatorSigner);
 
 const tx = await system.executeTyped(kamiEntityId, foodItemIndex);
@@ -285,8 +292,8 @@ Cast an item on an enemy Kami.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `kamiID` | `uint256` | Entity ID of the **target** (enemy) Kami |
-| `itemIndex` | `uint256` | Index of the item in inventory |
+| `targetID` | `uint256` | Entity ID of the **target** (enemy) Kami |
+| `itemIndex` | `uint32` | Index of the item in inventory |
 
 ### Description
 
@@ -297,7 +304,7 @@ Casts a combat item at an enemy Kami. Used in PvP or PvE scenarios to apply debu
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
-const ABI = ["function executeTyped(uint256 kamiID, uint256 itemIndex) returns (bytes)"];
+const ABI = ["function executeTyped(uint256 targetID, uint32 itemIndex) returns (bytes)"];
 const system = await getSystem("system.kami.cast.item", ABI, operatorSigner);
 
 const tx = await system.executeTyped(enemyKamiId, combatItemIndex);
@@ -320,19 +327,21 @@ Upgrade a Kami's skill.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `kamiID` | `uint256` | Entity ID of the Kami |
-| `skillIndex` | `uint256` | Index of the skill to upgrade |
+| `kamiID` | `uint256` | Entity ID of the Kami (contract parameter is `holderID`) |
+| `skillIndex` | `uint32` | Index of the skill to upgrade |
 
 ### Description
 
 Upgrades the specified skill on a Kami. Requires the Kami to have available skill points.
+
+> **Note:** The contract parameter is named `holderID` (since the system also supports account skills), but for Kami skill upgrades you pass the Kami's entity ID.
 
 ### Code Example
 
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
-const ABI = ["function executeTyped(uint256 kamiID, uint256 skillIndex) returns (bytes)"];
+const ABI = ["function executeTyped(uint256 kamiID, uint32 skillIndex) returns (bytes)"];
 const system = await getSystem("system.skill.upgrade", ABI, operatorSigner);
 
 const tx = await system.executeTyped(kamiEntityId, skillIndex);
@@ -427,14 +436,14 @@ Revive a dead Kami using $ONYX.
 | Property | Value |
 |----------|-------|
 | **System ID** | `system.kami.onyx.revive` |
-| **Wallet** | 🔐 Owner |
+| **Wallet** | 🎮 Operator |
 | **Gas** | Default |
 
 ### Parameters
 
 | Name | Type | Description |
 |------|------|-------------|
-| `kamiIndex` | `uint256` | Index of the dead Kami in account's Kami list |
+| `kamiIndex` | `uint32` | Index of the dead Kami in account's Kami list |
 
 ### Description
 
@@ -445,9 +454,8 @@ Revives a Kami that has died (health reached 0). Costs 33 $ONYX shards (item ind
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
-// Must use OWNER wallet
-const ABI = ["function executeTyped(uint256 kamiIndex) returns (bytes)"];
-const system = await getSystem("system.kami.onyx.revive", ABI, ownerSigner);
+const ABI = ["function executeTyped(uint256 id) returns (bytes)"];
+const system = await getSystem("system.kami.onyx.revive", ABI, operatorSigner);
 
 const tx = await system.executeTyped(deadKamiIndex);
 await tx.wait();

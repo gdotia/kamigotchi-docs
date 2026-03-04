@@ -18,7 +18,7 @@ Contribute to a community goal.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `goalIndex` | `uint256` | Index of the community goal |
+| `goalIndex` | `uint32` | Index of the community goal |
 | `amt` | `uint256` | Amount to contribute |
 
 ### Description
@@ -31,7 +31,7 @@ Contributes resources toward a community goal. Goals are collective objectives t
 import { getSystem } from "./kamigotchi.js";
 
 const ABI = [
-  "function executeTyped(uint256 goalIndex, uint256 amt) returns (bytes)",
+  "function executeTyped(uint32 goalIndex, uint256 amt) returns (bytes)",
 ];
 const system = await getSystem("system.goal.contribute", ABI, operatorSigner);
 
@@ -62,7 +62,7 @@ Claim reward from a completed goal.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `goalIndex` | `uint256` | Index of the community goal |
+| `goalIndex` | `uint32` | Index of the community goal |
 
 ### Description
 
@@ -73,7 +73,7 @@ Claims the player's share of rewards from a completed community goal. The reward
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
-const ABI = ["function executeTyped(uint256 goalIndex) returns (bytes)"];
+const ABI = ["function executeTyped(uint32 goalIndex) returns (bytes)"];
 const system = await getSystem("system.goal.claim", ABI, operatorSigner);
 
 const tx = await system.executeTyped(goalIndex);

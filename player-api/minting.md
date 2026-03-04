@@ -11,7 +11,7 @@ Mint new Kamis using gacha tickets.
 | Property | Value |
 |----------|-------|
 | **System ID** | `system.kami.gacha.mint` |
-| **Wallet** | 🎮 Operator |
+| **Wallet** | 🔐 Owner |
 | **Gas** | **4,000,000 + 3,000,000 per pet** |
 
 ### Parameters
@@ -32,7 +32,7 @@ After minting, use `pet.reveal()` to reveal the Kamis.
 import { getSystem } from "./kamigotchi.js";
 
 const ABI = ["function executeTyped(uint256 amount) returns (bytes)"];
-const system = await getSystem("system.kami.gacha.mint", ABI, operatorSigner);
+const system = await getSystem("system.kami.gacha.mint", ABI, ownerSigner);
 
 const mintAmount = 3;
 const gasLimit = 4_000_000 + 3_000_000 * mintAmount; // Scale with amount
@@ -57,29 +57,32 @@ Reveal minted Kamis.
 | Property | Value |
 |----------|-------|
 | **System ID** | `system.kami.gacha.reveal` |
-| **Wallet** | 🎮 Operator |
+| **Wallet** | 🌐 Any (no wallet restriction) |
 | **Gas** | Default |
 
 ### Parameters
 
 | Name | Type | Description |
 |------|------|-------------|
-| `commitIDs` | `uint256[]` | Array of commit IDs from `pet.mint()` |
+| `rawCommitIDs` | `uint256[]` | Array of commit IDs from `pet.mint()` |
 
 ### Description
 
 Reveals the traits (species, stats, rarity) of Kamis from previous mint commits. This is the **reveal** phase — on-chain randomness determines each Kami's attributes.
+
+> **Note:** This function is owner-agnostic — it can be called by **anyone**, not just the minter. The revealed Kamis are sent to the original minting account regardless of who calls `reveal()`.
 
 ### Code Example
 
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
-const ABI = ["function executeTyped(uint256[] commitIDs) returns (bytes)"];
-const system = await getSystem("system.kami.gacha.reveal", ABI, operatorSigner);
+// reveal() is a named function, NOT executeTyped
+const ABI = ["function reveal(uint256[] rawCommitIDs) external returns (uint256[])"];
+const system = await getSystem("system.kami.gacha.reveal", ABI, signer);
 
 const commitIds = [commitId1, commitId2, commitId3];
-const tx = await system.executeTyped(commitIds);
+const tx = await system.reveal(commitIds);
 await tx.wait();
 console.log("Kamis revealed!");
 ```
@@ -99,7 +102,7 @@ Reroll Kamis.
 | Property | Value |
 |----------|-------|
 | **System ID** | `system.kami.gacha.reroll` |
-| **Wallet** | 🎮 Operator |
+| **Wallet** | 🔐 Owner |
 | **Gas** | Default |
 
 ### Parameters
@@ -117,11 +120,12 @@ Rerolls one or more Kamis, re-randomizing their traits. The original Kami is rep
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
-const ABI = ["function executeTyped(uint256[] kamiIDs) returns (bytes)"];
-const system = await getSystem("system.kami.gacha.reroll", ABI, operatorSigner);
+// reroll() is a named function, NOT executeTyped
+const ABI = ["function reroll(uint256[] kamiIDs) external returns (uint256[])"];
+const system = await getSystem("system.kami.gacha.reroll", ABI, ownerSigner);
 
 const kamiIds = [kamiId1, kamiId2];
-const tx = await system.executeTyped(kamiIds);
+const tx = await system.reroll(kamiIds);
 await tx.wait();
 console.log("Kamis rerolled!");
 ```
@@ -141,7 +145,7 @@ Buy gacha tickets (public sale).
 | Property | Value |
 |----------|-------|
 | **System ID** | `system.buy.gacha.ticket` |
-| **Wallet** | 🎮 Operator |
+| **Wallet** | 🔐 Owner |
 | **Gas** | Default |
 
 ### Parameters
@@ -159,10 +163,11 @@ Purchases gacha tickets from the public sale. Tickets are required for `pet.mint
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
-const ABI = ["function executeTyped(uint256 amount) returns (bytes)"];
-const system = await getSystem("system.buy.gacha.ticket", ABI, operatorSigner);
+// buyPublic() is a named function, NOT executeTyped
+const ABI = ["function buyPublic(uint256 amount)"];
+const system = await getSystem("system.buy.gacha.ticket", ABI, ownerSigner);
 
-const tx = await system.executeTyped(5); // Buy 5 tickets
+const tx = await system.buyPublic(5); // Buy 5 tickets
 await tx.wait();
 console.log("Gacha tickets purchased!");
 ```
@@ -182,7 +187,7 @@ Buy gacha tickets (whitelist sale).
 | Property | Value |
 |----------|-------|
 | **System ID** | `system.buy.gacha.ticket` |
-| **Wallet** | 🎮 Operator |
+| **Wallet** | 🔐 Owner |
 | **Gas** | Default |
 
 ### Parameters
@@ -200,11 +205,11 @@ Purchases gacha tickets during a whitelist/presale phase. Only eligible wallets 
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
-// Whitelist buy — calls buyWL() with no parameters
+// buyWL() is a named function with no parameters
 const ABI = ["function buyWL() external"];
-const system = await getSystem("system.buy.gacha.ticket", ABI, operatorSigner);
+const system = await getSystem("system.buy.gacha.ticket", ABI, ownerSigner);
 
-const tx = await system.executeTyped();
+const tx = await system.buyWL();
 await tx.wait();
 console.log("Whitelist gacha tickets purchased!");
 ```

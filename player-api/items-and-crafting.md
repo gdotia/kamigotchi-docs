@@ -18,7 +18,7 @@ Burn items from inventory.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `indices` | `uint256[]` | Array of item indices to burn |
+| `indices` | `uint32[]` | Array of item indices to burn |
 | `amts` | `uint256[]` | Array of amounts to burn for each item |
 
 ### Description
@@ -31,7 +31,7 @@ Permanently destroys items from the player's inventory. Useful for clearing unwa
 import { getSystem } from "./kamigotchi.js";
 
 const ABI = [
-  "function executeTyped(uint256[] indices, uint256[] amts) returns (bytes)",
+  "function executeTyped(uint32[] indices, uint256[] amts) returns (bytes)",
 ];
 const system = await getSystem("system.item.burn", ABI, operatorSigner);
 
@@ -63,7 +63,7 @@ Craft an item from a recipe.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `recipeIndex` | `uint256` | Index of the crafting recipe |
+| `recipeIndex` | `uint32` | Index of the crafting recipe |
 | `amount` | `uint256` | Number of items to craft |
 
 ### Description
@@ -76,7 +76,7 @@ Crafts items using a predefined recipe. The required ingredients are consumed fr
 import { getSystem } from "./kamigotchi.js";
 
 const ABI = [
-  "function executeTyped(uint256 recipeIndex, uint256 amount) returns (bytes)",
+  "function executeTyped(uint32 recipeIndex, uint256 amount) returns (bytes)",
 ];
 const system = await getSystem("system.craft", ABI, operatorSigner);
 
@@ -108,7 +108,7 @@ Use an item from inventory.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `itemIndex` | `uint256` | Index of the item to use |
+| `itemIndex` | `uint32` | Index of the item to use |
 | `amt` | `uint256` | Amount to use |
 
 ### Description
@@ -121,7 +121,7 @@ Uses a consumable item from the account's inventory. Effects vary by item type (
 import { getSystem } from "./kamigotchi.js";
 
 const ABI = [
-  "function executeTyped(uint256 itemIndex, uint256 amt) returns (bytes)",
+  "function executeTyped(uint32 itemIndex, uint256 amt) returns (bytes)",
 ];
 const system = await getSystem("system.account.use.item", ABI, operatorSigner);
 
@@ -143,16 +143,16 @@ Transfer items to another account.
 | Property | Value |
 |----------|-------|
 | **System ID** | `system.item.transfer` |
-| **Wallet** | 🎮 Operator |
+| **Wallet** | 🔐 Owner |
 | **Gas** | Default |
 
 ### Parameters
 
 | Name | Type | Description |
 |------|------|-------------|
-| `itemIndex` | `uint256[]` | Array of item indices to transfer |
-| `amt` | `uint256[]` | Array of amounts for each item |
-| `accountID` | `uint256` | Entity ID of the receiving account |
+| `indices` | `uint32[]` | Array of item indices to transfer |
+| `amts` | `uint256[]` | Array of amounts for each item |
+| `targetID` | `uint256` | Entity ID of the receiving account |
 
 ### Description
 
@@ -164,9 +164,9 @@ Transfers items from the caller's inventory to another player's account. Both pl
 import { getSystem } from "./kamigotchi.js";
 
 const ABI = [
-  "function executeTyped(uint256[] itemIndex, uint256[] amt, uint256 accountID) returns (bytes)",
+  "function executeTyped(uint32[] indices, uint256[] amts, uint256 targetID) returns (bytes)",
 ];
-const system = await getSystem("system.item.transfer", ABI, operatorSigner);
+const system = await getSystem("system.item.transfer", ABI, ownerSigner);
 
 // Transfer 5 of item #3 and 10 of item #7 to another account
 const tx = await system.executeTyped([3, 7], [5, 10], targetAccountEntityId);
@@ -176,8 +176,8 @@ console.log("Items transferred!");
 
 ### Notes
 
-- `itemIndex` and `amt` arrays must have matching lengths.
-- The receiver's `accountID` is their entity ID (not wallet address).
+- `indices` and `amts` arrays must have matching lengths.
+- The receiver's `targetID` is their entity ID (not wallet address).
 - Reverts if you don't have sufficient items.
 
 ---

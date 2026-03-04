@@ -9,7 +9,7 @@ Kamigotchi is built on the **MUD Entity Component System (ECS)** framework — a
 ```
 ┌─────────────────────────────────────────────┐
 │                   World                      │
-│  (Root contract — system registry & router)  │
+│  (Root contract — system registry)            │
 ├─────────────────────────────────────────────┤
 │                                             │
 │  ┌─────────┐  ┌─────────┐  ┌─────────┐     │
@@ -29,7 +29,7 @@ Kamigotchi is built on the **MUD Entity Component System (ECS)** framework — a
 The **World** contract is the root of the entire game. It:
 
 - Maintains a registry of all **Systems** (logic contracts)
-- Routes `execute()` calls to the appropriate system
+- Resolves system addresses via `systems(keccak256(systemId))` — callers invoke systems directly at their resolved addresses
 - Manages access control and ownership
 - Address: [`0x2729174c265dbBd8416C6449E0E813E88f43D0E7`](https://scan.initia.xyz/yominet-1/address/0x2729174c265dbBd8416C6449E0E813E88f43D0E7)
 
@@ -90,10 +90,11 @@ The player's primary wallet (MetaMask, Rabby, etc.). Used for:
 
 - `register()` — Creating a new account
 - `set.operator()` — Delegating to an operator wallet
-- `set.pfp()` — Setting profile picture
 - `set.name()` — Renaming account
-- All `onyx.*` operations (rename, revive, respec via $ONYX)
+- All `onyx.rename` and `onyx.respec` operations (via $ONYX)
 - ERC721 staking/unstaking
+- Trading (create, execute, complete, cancel)
+- Gacha ticket purchase and minting
 
 ### Operator Wallet
 
@@ -102,7 +103,9 @@ A delegated wallet (typically managed by [Privy](https://privy.io)) for frequent
 - Moving between rooms
 - Sending chat messages
 - Starting/stopping harvests
-- Trading, crafting, questing
+- Crafting, questing
+- Setting profile picture (`set.pfp`)
+- Reviving Kami via ONYX (`onyx.revive`)
 - All routine gameplay actions
 
 > **Note:** The operator wallet is set during registration and can be updated by the owner wallet via `set.operator()`. This separation means the owner's private key is rarely exposed to transaction signing.
@@ -130,13 +133,15 @@ const accountData = await getterSystem.getAccount(accountEntityId);
 Every player action follows this pattern:
 
 ```
-1. Player signs tx with Owner or Operator wallet
-2. Tx calls World.execute(systemId, calldata)
-3. World resolves system address: systems[keccak256(systemId)]
-4. System.execute(calldata) runs game logic
+1. Client resolves system address: World.systems(keccak256(systemId))
+2. Player signs tx with Owner or Operator wallet
+3. Tx calls the system contract directly at its resolved address
+4. System.executeTyped(...) (or execute(bytes)) runs game logic
 5. System reads/writes Component state
 6. Events emitted → Indexer picks up changes → Client updates
 ```
+
+> **Note:** The World is a **registry**, not a proxy. It does not route or relay calls — clients resolve system addresses from the World and call them directly.
 
 ### Resolving System Addresses
 

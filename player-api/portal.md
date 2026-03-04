@@ -20,7 +20,7 @@ Deposit a Kami NFT from your wallet into the game world.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `index` | `uint256` | Index/token ID of the Kami NFT |
+| `tokenIndex` | `uint32` | Index/token ID of the Kami NFT |
 
 #### Description
 
@@ -44,7 +44,7 @@ const kami721 = new ethers.Contract(
 await (await kami721.approve(WORLD_ADDRESS, tokenId)).wait();
 
 // Step 2: Stake into game
-const ABI = ["function executeTyped(uint256 index) returns (bytes)"];
+const ABI = ["function executeTyped(uint32 tokenIndex) returns (bytes)"];
 const system = await getSystem("system.kami721.stake", ABI, ownerSigner);
 
 const tx = await system.executeTyped(tokenId);
@@ -74,7 +74,7 @@ Withdraw a Kami NFT from the game world back to your wallet.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `index` | `uint256` | Index of the Kami in-game |
+| `tokenIndex` | `uint32` | Index of the Kami in-game |
 
 #### Description
 
@@ -86,7 +86,7 @@ Withdraws a Kami from the game world back to the owner's wallet as an ERC-721 NF
 import { getSystem } from "./kamigotchi.js";
 
 // Must use OWNER wallet
-const ABI = ["function executeTyped(uint256 index) returns (bytes)"];
+const ABI = ["function executeTyped(uint32 tokenIndex) returns (bytes)"];
 const system = await getSystem("system.kami721.unstake", ABI, ownerSigner);
 
 const tx = await system.executeTyped(kamiIndex);
@@ -115,7 +115,7 @@ Batch stake multiple Kami NFTs.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `indices` | `uint256[]` | Array of Kami token IDs to stake |
+| `tokenIndices` | `uint32[]` | Array of Kami token IDs to stake |
 
 #### Code Example
 
@@ -134,11 +134,11 @@ const kami721 = new ethers.Contract(
 );
 await (await kami721.setApprovalForAll(WORLD_ADDRESS, true)).wait();
 
-// Batch stake
-const ABI = ["function executeTyped(uint256[] indices) returns (bytes)"];
+// Batch stake — uses executeBatch(), NOT executeTyped
+const ABI = ["function executeBatch(uint32[] tokenIndices)"];
 const system = await getSystem("system.kami721.stake", ABI, ownerSigner);
 
-const tx = await system.executeTyped([tokenId1, tokenId2, tokenId3]);
+const tx = await system.executeBatch([tokenId1, tokenId2, tokenId3]);
 await tx.wait();
 ```
 
@@ -158,17 +158,18 @@ Batch unstake multiple Kamis.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `indices` | `uint256[]` | Array of in-game Kami indices to unstake |
+| `tokenIndices` | `uint32[]` | Array of in-game Kami indices to unstake |
 
 #### Code Example
 
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
-const ABI = ["function executeTyped(uint256[] indices) returns (bytes)"];
+// Batch unstake — uses executeBatch(), NOT executeTyped
+const ABI = ["function executeBatch(uint32[] tokenIndices)"];
 const system = await getSystem("system.kami721.unstake", ABI, ownerSigner);
 
-const tx = await system.executeTyped([kamiIndex1, kamiIndex2, kamiIndex3]);
+const tx = await system.executeBatch([kamiIndex1, kamiIndex2, kamiIndex3]);
 await tx.wait();
 ```
 
@@ -188,7 +189,7 @@ Batch transfer Kamis to a single address.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `indices` | `uint256[]` | Array of Kami indices to transfer |
+| `tokenIndices` | `uint256[]` | Array of Kami token indices to transfer |
 | `to` | `address` | Recipient address |
 
 #### Code Example
@@ -196,12 +197,13 @@ Batch transfer Kamis to a single address.
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
+// batchTransfer() is a named function, NOT executeTyped
 const ABI = [
-  "function executeTyped(uint256[] indices, address to) returns (bytes)",
+  "function batchTransfer(uint256[] tokenIndices, address to)",
 ];
 const system = await getSystem("system.kami721.transfer", ABI, ownerSigner);
 
-const tx = await system.executeTyped(
+const tx = await system.batchTransfer(
   [kamiIndex1, kamiIndex2],
   recipientAddress
 );
@@ -224,20 +226,21 @@ Batch transfer Kamis to multiple addresses (1:1 mapping).
 
 | Name | Type | Description |
 |------|------|-------------|
-| `indices` | `uint256[]` | Array of Kami indices |
-| `tos` | `address[]` | Array of recipient addresses (matching length) |
+| `tokenIndices` | `uint256[]` | Array of Kami token indices |
+| `to` | `address[]` | Array of recipient addresses (matching length) |
 
 #### Code Example
 
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
+// batchTransferToMany() is a named function, NOT executeTyped
 const ABI = [
-  "function executeTyped(uint256[] indices, address[] tos) returns (bytes)",
+  "function batchTransferToMany(uint256[] tokenIndices, address[] to)",
 ];
 const system = await getSystem("system.kami721.transfer", ABI, ownerSigner);
 
-const tx = await system.executeTyped(
+const tx = await system.batchTransferToMany(
   [kamiIndex1, kamiIndex2],
   [recipientAddr1, recipientAddr2]
 );
@@ -262,7 +265,7 @@ Deposit an ERC-20 token into the game world.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `itemIndex` | `uint256` | Game item index representing the ERC-20 token |
+| `itemIndex` | `uint32` | Game item index representing the ERC-20 token |
 | `itemAmt` | `uint256` | Amount to deposit |
 
 #### Description
@@ -286,13 +289,13 @@ const onyx = new ethers.Contract(
 );
 await (await onyx.approve(WORLD_ADDRESS, ethers.MaxUint256)).wait();
 
-// Step 2: Deposit into game
+// Step 2: Deposit into game — deposit() is a named function, NOT executeTyped
 const ABI = [
-  "function executeTyped(uint256 itemIndex, uint256 itemAmt) returns (bytes)",
+  "function deposit(uint32 itemIndex, uint256 itemAmt)",
 ];
 const system = await getSystem("system.erc20.portal", ABI, ownerSigner);
 
-const tx = await system.executeTyped(onyxItemIndex, depositAmount);
+const tx = await system.deposit(onyxItemIndex, depositAmount);
 await tx.wait();
 console.log("ONYX deposited into game world!");
 ```
@@ -318,7 +321,7 @@ Withdraw ERC-20 tokens from the game world.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `itemIndex` | `uint256` | Game item index representing the ERC-20 token |
+| `itemIndex` | `uint32` | Game item index representing the ERC-20 token |
 | `itemAmt` | `uint256` | Amount to withdraw |
 
 #### Description
@@ -330,12 +333,13 @@ Initiates a withdrawal of ERC-20 tokens from the game world back to the owner's 
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
+// withdraw() is a named function, NOT executeTyped
 const ABI = [
-  "function executeTyped(uint256 itemIndex, uint256 itemAmt) returns (bytes)",
+  "function withdraw(uint32 itemIndex, uint256 itemAmt) returns (uint256)",
 ];
 const system = await getSystem("system.erc20.portal", ABI, ownerSigner);
 
-const tx = await system.executeTyped(onyxItemIndex, withdrawAmount);
+const tx = await system.withdraw(onyxItemIndex, withdrawAmount);
 await tx.wait();
 console.log("Withdrawal initiated — use ERC20.claim() after the pending period.");
 ```
@@ -367,10 +371,11 @@ Claims a pending ERC-20 withdrawal after the required waiting period has elapsed
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
-const ABI = ["function executeTyped(uint256 receiptID) returns (bytes)"];
+// claim() is a named function, NOT executeTyped
+const ABI = ["function claim(uint256 receiptID)"];
 const system = await getSystem("system.erc20.portal", ABI, ownerSigner);
 
-const tx = await system.executeTyped(withdrawalReceiptId);
+const tx = await system.claim(withdrawalReceiptId);
 await tx.wait();
 console.log("ERC-20 tokens claimed to wallet!");
 ```
@@ -402,10 +407,11 @@ Cancels a pending withdrawal. The tokens are returned to the player's in-game in
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
-const ABI = ["function executeTyped(uint256 receiptID) returns (bytes)"];
+// cancel() is a named function, NOT executeTyped
+const ABI = ["function cancel(uint256 receiptID)"];
 const system = await getSystem("system.erc20.portal", ABI, ownerSigner);
 
-const tx = await system.executeTyped(withdrawalReceiptId);
+const tx = await system.cancel(withdrawalReceiptId);
 await tx.wait();
 console.log("Withdrawal cancelled — tokens returned to game inventory.");
 ```

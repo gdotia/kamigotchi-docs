@@ -18,7 +18,7 @@ Accept a quest.
 
 | Name | Type | Description |
 |------|------|-------------|
-| `index` | `uint256` | Index of the quest to accept |
+| `index` | `uint32` | Index of the quest to accept |
 
 ### Description
 
@@ -29,7 +29,7 @@ Accepts a quest from the available quest list. The quest is added to the player'
 ```javascript
 import { getSystem } from "./kamigotchi.js";
 
-const ABI = ["function executeTyped(uint256 index) returns (bytes)"];
+const ABI = ["function executeTyped(uint32 index) returns (bytes)"];
 const system = await getSystem("system.quest.accept", ABI, operatorSigner);
 
 const tx = await system.executeTyped(questIndex);
@@ -85,6 +85,47 @@ console.log("Quest completed! Rewards claimed.");
 
 ---
 
+## quest.drop()
+
+Drop/abandon an active quest.
+
+| Property | Value |
+|----------|-------|
+| **System ID** | `system.quest.drop` |
+| **Wallet** | 🎮 Operator |
+| **Gas** | Default |
+
+### Parameters
+
+| Name | Type | Description |
+|------|------|-------------|
+| `id` | `uint256` | Entity ID of the active quest to drop |
+
+### Description
+
+Drops (abandons) an active quest. The quest is removed from the player's active quest list. Any progress toward the quest's objectives is lost. Useful for clearing quests you no longer want to pursue.
+
+### Code Example
+
+```javascript
+import { getSystem } from "./kamigotchi.js";
+
+const ABI = ["function executeTyped(uint256 id) returns (bytes)"];
+const system = await getSystem("system.quest.drop", ABI, operatorSigner);
+
+const tx = await system.executeTyped(questEntityId);
+await tx.wait();
+console.log("Quest dropped!");
+```
+
+### Notes
+
+- The `id` parameter is the **entity ID** of the active quest (not the quest index used in `accept()`).
+- Cannot drop a completed quest.
+- Repeatable quests can be re-accepted after dropping.
+
+---
+
 ## Quest Lifecycle
 
 ```
@@ -93,9 +134,11 @@ Available Quest          Active Quest           Completed
        │                      │                     │
        ▼                      ▼                     ▼
   quest.accept(index) → quest.complete(entityId) → Rewards
+                              │
+                              └── quest.drop(entityId) → Abandoned
 ```
 
-> **Note:** `accept()` takes a quest **index** (from the quest catalog), while `complete()` takes the quest **entity ID** (assigned when the quest becomes active).
+> **Note:** `accept()` takes a quest **index** (from the quest catalog), while `complete()` and `drop()` take the quest **entity ID** (assigned when the quest becomes active).
 
 ---
 

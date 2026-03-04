@@ -105,7 +105,8 @@ Upgrade Kami abilities:
 
 ## Equipment
 
-- Kamis have equipment slots (weapon, armor, accessory, tool, etc.)
+- Kamis and accounts have equipment slots using the format `{EntityType}_{SlotName}_Slot`
+- Current slots in-game: `Kami_Pet_Slot` (companions/masks for Kamis), `Passport_slot` (world passports), `Account_Badge_Slot` (account-level badges)
 - Equip: `POST /api/kami/{id}/equip { itemId }`
 - Unequip: `POST /api/kami/{id}/unequip { slot }`
 - Equipment provides stat boosts and special abilities
@@ -147,7 +148,7 @@ Mint new Kamis through the gacha:
 
 - **Friends:** Request, accept, cancel, block (`system.friend.*`)
 - **Chat:** In-game messaging (`system.chat`)
-- **Relationships:** Advance Kami-to-Kami relationships (`system.relationship.advance`)
+- **Relationships:** Advance player-to-NPC relationships (`system.relationship.advance`)
 
 ## Strategy Tips
 

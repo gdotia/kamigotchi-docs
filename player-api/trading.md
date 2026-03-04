@@ -11,16 +11,16 @@ Create a new trade offer.
 | Property | Value |
 |----------|-------|
 | **System ID** | `system.trade.create` |
-| **Wallet** | 🎮 Operator |
+| **Wallet** | 🔐 Owner |
 | **Gas** | Default |
 
 ### Parameters
 
 | Name | Type | Description |
 |------|------|-------------|
-| `buyIndices` | `uint256[]` | Item indices the maker wants to receive |
+| `buyIndices` | `uint32[]` | Item indices the maker wants to receive |
 | `buyAmts` | `uint256[]` | Amounts for each buy item |
-| `sellIndices` | `uint256[]` | Item indices the maker is offering |
+| `sellIndices` | `uint32[]` | Item indices the maker is offering |
 | `sellAmts` | `uint256[]` | Amounts for each sell item |
 | `targetID` | `uint256` | Target account entity ID (0 for open trade) |
 
@@ -36,9 +36,9 @@ If `targetID` is non-zero, only that specific account can execute the trade. If 
 import { getSystem } from "./kamigotchi.js";
 
 const ABI = [
-  "function executeTyped(uint256[] buyIndices, uint256[] buyAmts, uint256[] sellIndices, uint256[] sellAmts, uint256 targetID) returns (bytes)",
+  "function executeTyped(uint32[] buyIndices, uint256[] buyAmts, uint32[] sellIndices, uint256[] sellAmts, uint256 targetID) returns (bytes)",
 ];
-const system = await getSystem("system.trade.create", ABI, operatorSigner);
+const system = await getSystem("system.trade.create", ABI, ownerSigner);
 
 // I want to trade 5 of item #3 for 10 of item #7
 const tx = await system.executeTyped(
@@ -67,7 +67,7 @@ Execute (accept) a pending trade.
 | Property | Value |
 |----------|-------|
 | **System ID** | `system.trade.execute` |
-| **Wallet** | 🎮 Operator |
+| **Wallet** | 🔐 Owner |
 | **Gas** | Default |
 
 ### Parameters
@@ -86,7 +86,7 @@ Called by the **taker** (not the maker) to accept a pending trade. The taker's i
 import { getSystem } from "./kamigotchi.js";
 
 const ABI = ["function executeTyped(uint256 tradeID) returns (bytes)"];
-const system = await getSystem("system.trade.execute", ABI, operatorSigner);
+const system = await getSystem("system.trade.execute", ABI, ownerSigner);
 
 const tx = await system.executeTyped(tradeEntityId);
 await tx.wait();
@@ -109,7 +109,7 @@ Complete an executed trade.
 | Property | Value |
 |----------|-------|
 | **System ID** | `system.trade.complete` |
-| **Wallet** | 🎮 Operator |
+| **Wallet** | 🔐 Owner |
 | **Gas** | Default |
 
 ### Parameters
@@ -132,7 +132,7 @@ The trade entity is resolved.
 import { getSystem } from "./kamigotchi.js";
 
 const ABI = ["function executeTyped(uint256 tradeID) returns (bytes)"];
-const system = await getSystem("system.trade.complete", ABI, operatorSigner);
+const system = await getSystem("system.trade.complete", ABI, ownerSigner);
 
 const tx = await system.executeTyped(tradeEntityId);
 await tx.wait();
@@ -153,7 +153,7 @@ Cancel a pending trade.
 | Property | Value |
 |----------|-------|
 | **System ID** | `system.trade.cancel` |
-| **Wallet** | 🎮 Operator |
+| **Wallet** | 🔐 Owner |
 | **Gas** | Default |
 
 ### Parameters
@@ -172,7 +172,7 @@ Cancels a trade and **returns the escrowed items** to the maker's inventory. Onl
 import { getSystem } from "./kamigotchi.js";
 
 const ABI = ["function executeTyped(uint256 tradeID) returns (bytes)"];
-const system = await getSystem("system.trade.cancel", ABI, operatorSigner);
+const system = await getSystem("system.trade.cancel", ABI, ownerSigner);
 
 const tx = await system.executeTyped(tradeEntityId);
 await tx.wait();
