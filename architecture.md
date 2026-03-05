@@ -257,5 +257,5 @@ Each Kami has a state tracked by `StateComponent`, defined by the `KamiState` en
 
 - [Chain Configuration](chain-configuration.md) — Network details
 - [Live Addresses](contracts/live-addresses.md) — Contract addresses
-- [System IDs & ABIs](contracts/ids-and-abis.md) — All 66 system identifiers
+- [System IDs & ABIs](contracts/ids-and-abis.md) — All 67 system identifiers
 - [Player API Overview](player-api/overview.md) — How to call systems

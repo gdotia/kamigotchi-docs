@@ -203,6 +203,21 @@ Use `LISTING_ID` from confirmed tx events/indexer output; listing IDs are non-de
 
 ---
 
+## Typical Bot Gameplay Loop
+
+Once registered with a Kami, a bot's core loop looks like this:
+
+1. **Harvest & scavenge** — Send your Kami to a node (`system.harvest.start`) to earn $MUSU. Certain nodes also have scavenge bars where you can claim items (`system.scavenge.claim`). Harvesting drains HP over time — when it gets dangerous, feed items to your Kami (`system.kami.use.item`) to heal and reset the danger, or stop (`system.harvest.stop`) and rest until full HP. If HP drops below a certain threshold, other players at the same node can kill your Kami. If HP hits 0, your Kami is *starving* — you cannot stop or collect, only feed to heal first, then stop. Never leave a Kami unattended.
+2. **Level up** — Spend earned XP to level (`system.kami.level`), then allocate skill points (`system.skill.upgrade`) to strengthen your Kami's stats.
+3. **Equip & craft** — Craft items from materials (`system.craft`) and equip gear for stat bonuses (`system.kami.equip`).
+4. **Quests** — Accept quests (`system.quest.accept`) and complete them for rewards (`system.quest.complete`).
+5. **Trade** — Trade items with players (`system.trade.create`) or buy/sell Kamis on KamiSwap (`system.kamimarket.buy` / `system.kamimarket.list`).
+6. **Expand** — Mint new Kamis via gacha (`system.kami.gacha.mint` → `reveal()`), build NPC relationships (`system.relationship.advance`), and contribute to community goals (`system.goal.contribute`).
+
+> ⚠️ **Death is punishing but not permanent.** A dead Kami can be revived with Onyx Shards or a Red Gakki Ribbon. Always monitor your Kami's health while harvesting.
+
+---
+
 ## Next Docs
 
 1. [Integration Guide](integration-guide.md) for full account + first-Kami setup.

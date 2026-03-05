@@ -18,7 +18,7 @@ This documentation covers the smart contract architecture, chain configuration, 
 ### Contracts
 
 - [Live Addresses](contracts/live-addresses.md) — Deployed contract addresses
-- [System IDs & ABIs](contracts/ids-and-abis.md) — All 66 system IDs and ABI reference
+- [System IDs & ABIs](contracts/ids-and-abis.md) — All 67 system IDs and ABI reference
 
 ### Player API
 
