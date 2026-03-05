@@ -12,7 +12,7 @@ This folder stores the working Base -> Initia L1 -> Yominet flow that unwraps to
 ```bash
 cd /home/matrix/kamigotchi-docs/tools/yominet-bridge
 npm init -y
-npm i ethers
+npm i ethers @initia/initia.js
 ```
 
 ## Run (dry-run first)
@@ -20,6 +20,14 @@ npm i ethers
 ```bash
 export PRIVATE_KEY='YOUR_BASE_PRIVATE_KEY'
 export DRY_RUN=1
+node bridge-live.mjs
+```
+
+## Print derived address mapping only
+
+```bash
+export PRIVATE_KEY='YOUR_BASE_PRIVATE_KEY'
+export PRINT_ADDRESSES=1
 node bridge-live.mjs
 ```
 
@@ -33,10 +41,29 @@ node bridge-live.mjs
 
 ## Optional env vars
 
-- `RECIPIENT_EVM` default: `0x8F8A3c74DC951859de6e6Eb5E357f6C226b79A38`
-- `RECIPIENT_INITIA` default: `init1379rcaxuj5v9nhnwd667x4lkcgnt0x3cpfqtr3`
+- `RECIPIENT_EVM` default: derived from `PRIVATE_KEY` (0x address)
+- `RECIPIENT_INITIA` default: derived from `PRIVATE_KEY` (`init1...` address)
 - `BRIDGE_AMOUNT_ETH` default: `0.0001`
 - `BASE_RPC` default: `https://mainnet.base.org`
+- `PRINT_ADDRESSES` default: unset (`1` = print mapping and exit)
+
+## Address mapping behavior
+
+- With only `PRIVATE_KEY`, script deterministically maps:
+  - `PRIVATE_KEY -> RECIPIENT_EVM` (0x)
+  - `PRIVATE_KEY -> RECIPIENT_INITIA` (init1...)
+- If you override recipients, set both `RECIPIENT_EVM` and `RECIPIENT_INITIA` together.
+- You cannot derive an `init1...` address from an arbitrary `0x` address alone. The shared source of truth is the private key.
+
+## Advanced recipient override
+
+```bash
+export PRIVATE_KEY='YOUR_BASE_PRIVATE_KEY'
+export RECIPIENT_EVM='0xYourDestinationEvmAddress'
+export RECIPIENT_INITIA='init1yourdestinationbech32'
+export DRY_RUN=1
+node bridge-live.mjs
+```
 
 ## Notes
 

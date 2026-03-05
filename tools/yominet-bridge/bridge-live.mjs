@@ -1,20 +1,17 @@
 import { ethers } from "ethers";
+import { AccAddress, RawKey } from "@initia/initia.js";
 
 // ============================================================
 // Config
 // ============================================================
-const PRIVATE_KEY = process.env.PRIVATE_KEY || "";
-if (!PRIVATE_KEY) {
-  console.error("Missing PRIVATE_KEY env var");
-  process.exit(1);
-}
-
-const RECIPIENT_EVM = process.env.RECIPIENT_EVM || "0x8F8A3c74DC951859de6e6Eb5E357f6C226b79A38";
-const RECIPIENT_INITIA = process.env.RECIPIENT_INITIA || "init1379rcaxuj5v9nhnwd667x4lkcgnt0x3cpfqtr3";
-const BRIDGE_AMOUNT = ethers.parseEther(process.env.BRIDGE_AMOUNT_ETH || "0.0001");
+const PRIVATE_KEY_INPUT = (process.env.PRIVATE_KEY || "").trim();
+const RECIPIENT_EVM_OVERRIDE = readOptionalEnv("RECIPIENT_EVM");
+const RECIPIENT_INITIA_OVERRIDE = readOptionalEnv("RECIPIENT_INITIA");
+const BRIDGE_AMOUNT = ethers.parseEther(readOptionalEnv("BRIDGE_AMOUNT_ETH") || "0.0001");
 const OFT_ADDRESS = "0x66a503a1060ab3f2b1aaabed613fe30babbc1bde"; // NativeOFTAdapter on Base
 const DST_EID = 30326; // Initia L1 LayerZero endpoint ID
-const BASE_RPC = process.env.BASE_RPC || "https://mainnet.base.org";
+const BASE_RPC = readOptionalEnv("BASE_RPC") || "https://mainnet.base.org";
+const PRINT_ADDRESSES = process.env.PRINT_ADDRESSES === "1";
 
 // LayerZero receiver on Initia L1
 const FORWARDING_CONTRACT = "0xe81950cf0154b9379ea0636552bc6b54bb0356ff5435c23990f54314e77f9cf4";
@@ -34,6 +31,41 @@ const OFT_ABI = [
   "function send((uint32 dstEid, bytes32 to, uint256 amountLD, uint256 minAmountLD, bytes extraOptions, bytes composeMsg, bytes oftCmd) _sendParam, (uint256 nativeFee, uint256 lzTokenFee) _fee, address _refundAddress) payable returns ((bytes32 guid, uint64 nonce, uint256 amountLD, uint256 amountSentLD))",
   "function quoteSend((uint32 dstEid, bytes32 to, uint256 amountLD, uint256 minAmountLD, bytes extraOptions, bytes composeMsg, bytes oftCmd) _sendParam, bool _payInLzToken) view returns ((uint256 nativeFee, uint256 lzTokenFee))",
 ];
+
+function readOptionalEnv(name) {
+  const value = process.env[name];
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  return trimmed === "" ? undefined : trimmed;
+}
+
+function normalizePrivateKey(input) {
+  if (!input) {
+    throw new Error("Missing PRIVATE_KEY env var");
+  }
+
+  const withoutPrefix = input.startsWith("0x") ? input.slice(2) : input;
+  if (!/^[0-9a-fA-F]{64}$/.test(withoutPrefix)) {
+    throw new Error("Invalid PRIVATE_KEY format. Expected 32-byte hex, optionally prefixed with 0x.");
+  }
+
+  return `0x${withoutPrefix.toLowerCase()}`;
+}
+
+function normalizeEvmAddress(value, label) {
+  try {
+    return ethers.getAddress(value);
+  } catch {
+    throw new Error(`Invalid ${label}. Expected a valid 0x EVM address.`);
+  }
+}
+
+function normalizeInitiaAddress(value, label) {
+  if (!AccAddress.validate(value)) {
+    throw new Error(`Invalid ${label}. Expected a valid init1... bech32 address.`);
+  }
+  return value;
+}
 
 // ============================================================
 // Build compose message:
@@ -79,8 +111,36 @@ function buildComposeMsg(recipientEvm, senderInitia, amountScaled) {
 const EXTRA_OPTIONS = "0x000301001101000000000000000000000000000f4240010013030000000000000000000000000000000f4240010013030000000000000000000000000000000f4240";
 
 async function main() {
+  if ((RECIPIENT_EVM_OVERRIDE && !RECIPIENT_INITIA_OVERRIDE) || (!RECIPIENT_EVM_OVERRIDE && RECIPIENT_INITIA_OVERRIDE)) {
+    throw new Error("Set both RECIPIENT_EVM and RECIPIENT_INITIA together, or set neither.");
+  }
+
+  const privateKey = normalizePrivateKey(PRIVATE_KEY_INPUT);
+  const derivedEvm = new ethers.Wallet(privateKey).address;
+  const derivedInitia = new RawKey(Buffer.from(privateKey.slice(2), "hex")).accAddress;
+  if (!AccAddress.validate(derivedInitia)) {
+    throw new Error("Failed to derive a valid init1... address from PRIVATE_KEY.");
+  }
+
+  const recipientEvm = RECIPIENT_EVM_OVERRIDE
+    ? normalizeEvmAddress(RECIPIENT_EVM_OVERRIDE, "RECIPIENT_EVM")
+    : derivedEvm;
+  const recipientInitia = RECIPIENT_INITIA_OVERRIDE
+    ? normalizeInitiaAddress(RECIPIENT_INITIA_OVERRIDE, "RECIPIENT_INITIA")
+    : derivedInitia;
+
+  console.log("Derived EVM address:", derivedEvm);
+  console.log("Derived Initia address:", derivedInitia);
+  console.log("Recipient EVM:", recipientEvm, RECIPIENT_EVM_OVERRIDE ? "(override)" : "(derived)");
+  console.log("Recipient Initia:", recipientInitia, RECIPIENT_INITIA_OVERRIDE ? "(override)" : "(derived)");
+
+  if (PRINT_ADDRESSES) {
+    console.log("\nPRINT_ADDRESSES=1 set, exiting before quote/send.");
+    return;
+  }
+
   const provider = new ethers.JsonRpcProvider(BASE_RPC);
-  const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+  const wallet = new ethers.Wallet(privateKey, provider);
   const oft = new ethers.Contract(OFT_ADDRESS, OFT_ABI, wallet);
 
   console.log("Wallet:", wallet.address);
@@ -94,7 +154,7 @@ async function main() {
   console.log("Bridge amount:", ethers.formatEther(amountLD), "ETH");
   console.log("Scaled amount for Initia IBC token:", amountScaled);
 
-  const composeMsgBytes = buildComposeMsg(RECIPIENT_EVM, RECIPIENT_INITIA, amountScaled);
+  const composeMsgBytes = buildComposeMsg(recipientEvm, recipientInitia, amountScaled);
   const composeMsgHex = ethers.hexlify(composeMsgBytes);
 
   console.log("\nCompose message (JSON):");
