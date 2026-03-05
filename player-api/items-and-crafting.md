@@ -177,6 +177,7 @@ console.log("Items transferred!");
 ### Notes
 
 - `indices` and `amts` arrays must have matching lengths.
+- **Batch limit:** Up to **8 item types** per transaction.
 - The receiver's `targetID` is their entity ID (not wallet address).
 - Reverts if you don't have sufficient items.
 - **Transfer fee:** Each item type (index) transferred costs **15 MUSU**. The total fee is `indices.length × 15 MUSU`, deducted from the sender's inventory. For example, transferring 3 different item types costs 45 MUSU regardless of the amounts transferred.

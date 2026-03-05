@@ -552,6 +552,8 @@ Send in-world (staked) Kamis to another player without unstaking.
 
 Transfers one or more in-world Kamis to another player's account. Unlike NFT transfers (`system.kami721.transfer`), this operates entirely within the game world — Kamis stay staked and playable. The recipient is identified by their **operator wallet address** (not their owner address). If a Kami is currently listed on the marketplace, its listing is automatically cancelled before transfer. A purchase cooldown is applied to the transferred Kami.
 
+> **Batch limit:** Up to **9 Kamis** per transaction.
+
 ### Code Example
 
 ```javascript
