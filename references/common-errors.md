@@ -1,3 +1,7 @@
+> **Doc Class:** Core Resource
+> **Canonical Source:** Kamigotchi on-chain contracts on Yominet and the official repository (`Asphodel-OS/kamigotchi`).
+> **Freshness Rule:** Verify mutable values against canonical sources before merge and record updates in `references/data-provenance.md`.
+
 # Common Revert Reasons
 
 Quick reference for common Solidity revert messages across Kamigotchi systems. These are the exact error strings returned on-chain — use them for error handling in your integration.

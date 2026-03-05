@@ -1,3 +1,7 @@
+> **Doc Class:** Core Resource
+> **Canonical Source:** Kamigotchi on-chain contracts on Yominet and the official repository (`Asphodel-OS/kamigotchi`).
+> **Freshness Rule:** Verify mutable values against canonical sources before merge and record updates in `references/data-provenance.md`.
+
 # Entity Discovery
 
 How to find and derive the entity IDs you need for gameplay. This is the missing link between "I registered an account" and "now what?"

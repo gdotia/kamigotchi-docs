@@ -1,3 +1,7 @@
+> **Doc Class:** Core Resource
+> **Canonical Source:** Kamigotchi on-chain contracts on Yominet and the official repository (`Asphodel-OS/kamigotchi`).
+> **Freshness Rule:** Verify mutable values against canonical sources before merge and record updates in `references/data-provenance.md`.
+
 # Portal (ERC721 / ERC20)
 
 The portal system bridges assets between on-chain wallets and the in-game world. Stake NFTs into the game and manage ERC-20 token deposits/withdrawals.

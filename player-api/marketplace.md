@@ -1,3 +1,7 @@
+> **Doc Class:** Core Resource
+> **Canonical Source:** Kamigotchi on-chain contracts on Yominet and the official repository (`Asphodel-OS/kamigotchi`).
+> **Freshness Rule:** Verify mutable values against canonical sources before merge and record updates in `references/data-provenance.md`.
+
 # KamiSwap — Kami Marketplace
 
 KamiSwap is Kamigotchi's native on-chain Kami marketplace. Players can list Kamis for sale, make offers on specific Kamis or the collection, and purchase Kamis — all without leaving the game. **New players should purchase their first Kami on KamiSwap.**

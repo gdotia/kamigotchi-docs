@@ -1,3 +1,7 @@
+> **Doc Class:** Core Resource
+> **Canonical Source:** Kamigotchi on-chain contracts on Yominet and the official repository (`Asphodel-OS/kamigotchi`).
+> **Freshness Rule:** Verify mutable values against canonical sources before merge and record updates in `references/data-provenance.md`.
+
 # Quests
 
 Quests are objectives players can accept and complete for rewards. The quest system tracks progress on-chain.

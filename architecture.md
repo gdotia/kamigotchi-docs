@@ -1,3 +1,7 @@
+> **Doc Class:** Core Resource
+> **Canonical Source:** Kamigotchi on-chain contracts on Yominet and the official repository (`Asphodel-OS/kamigotchi`).
+> **Freshness Rule:** Verify mutable values against canonical sources before merge and record updates in `references/data-provenance.md`.
+
 # Architecture Overview
 
 Kamigotchi is built on the **MUD Entity Component System (ECS)** framework — a fully on-chain game architecture where all state lives in smart contracts on Yominet, an Initia L2 rollup.

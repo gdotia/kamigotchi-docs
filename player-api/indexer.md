@@ -1,3 +1,7 @@
+> **Doc Class:** Core Resource
+> **Canonical Source:** Kamigotchi on-chain contracts on Yominet and the official repository (`Asphodel-OS/kamigotchi`).
+> **Freshness Rule:** Verify mutable values against canonical sources before merge and record updates in `references/data-provenance.md`.
+
 # Kamiden Indexer (gRPC)
 
 Kamiden is Kamigotchi's off-chain **gRPC indexer** service. It indexes on-chain events into queryable endpoints and provides a real-time event stream. Use it to enumerate marketplace listings, query trade history, look up battles, and subscribe to live game events.

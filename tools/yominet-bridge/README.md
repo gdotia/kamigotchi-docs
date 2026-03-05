@@ -1,3 +1,7 @@
+> **Doc Class:** Agent Guidance
+> **Canonical Source:** Derived from Core Resources in this repo and canonical sources listed in `references/data-provenance.md`.
+> **Freshness Rule:** Do not become source-of-truth for canonical values; link back to Core Resources for addresses, IDs, and tables.
+
 # Yominet Bridge (Working Route)
 
 This folder stores the working Base -> Initia L1 -> Yominet flow that unwraps to the local Yominet ETH-denom token contract.

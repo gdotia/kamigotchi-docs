@@ -1,3 +1,7 @@
+> **Doc Class:** Agent Guidance
+> **Canonical Source:** Derived from Core Resources in this repo and canonical sources listed in `references/data-provenance.md`.
+> **Freshness Rule:** Do not become source-of-truth for canonical values; link back to Core Resources for addresses, IDs, and tables.
+
 # Getting Started with Kamigotchi
 
 Two ways in: **play the game**, or **build a bot**. Pick your track.

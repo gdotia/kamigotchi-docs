@@ -1,3 +1,7 @@
+> **Doc Class:** Agent Guidance
+> **Canonical Source:** Derived from Core Resources in this repo and canonical sources listed in `references/data-provenance.md`.
+> **Freshness Rule:** Do not become source-of-truth for canonical values; link back to Core Resources for addresses, IDs, and tables.
+
 # Integration Guide
 
 This guide walks third-party developers through integrating with Kamigotchi's on-chain systems. By the end, you'll be able to register accounts, manage Kamis, and interact with the full game API.

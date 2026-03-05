@@ -1,8 +1,14 @@
+> **Doc Class:** Core Resource
+> **Canonical Source:** On-chain registries/components on Yominet plus official Kamigotchi deployment data (`Asphodel-OS/kamigotchi`).
+> **Freshness Rule:** Treat this page as a mirror; re-verify mutable values against canonical sources and update `references/data-provenance.md` in the same change.
+
 # Game Data Reference
 
 Lookup tables for game indices used across Kamigotchi systems. These values come from the deployment data.
 
 > **Note:** Game data is defined in CSV sheets and deployed on-chain via admin systems. The tables below reflect the current live deployment. CSV file paths referenced below are internal to the Kamigotchi source repository and are not accessible to third-party developers. For the most up-to-date data, query the on-chain components directly.
+>
+> **Freshness authority:** see [Data Provenance and Freshness](data-provenance.md).
 
 ---
 

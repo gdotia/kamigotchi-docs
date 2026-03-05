@@ -1,3 +1,7 @@
+> **Doc Class:** Core Resource
+> **Canonical Source:** Kamigotchi on-chain contracts on Yominet and the official repository (`Asphodel-OS/kamigotchi`).
+> **Freshness Rule:** Verify mutable values against canonical sources before merge and record updates in `references/data-provenance.md`.
+
 # System IDs & ABI References
 
 Kamigotchi has **66 documented player-facing systems** in the World contract. Each system is identified by a human-readable string ID, hashed with `keccak256` for on-chain lookup. The World contains additional internal and admin systems not covered here.

@@ -1,3 +1,7 @@
+> **Doc Class:** Core Resource
+> **Canonical Source:** Kamigotchi on-chain contracts on Yominet and the official repository (`Asphodel-OS/kamigotchi`).
+> **Freshness Rule:** Verify mutable values against canonical sources before merge and record updates in `references/data-provenance.md`.
+
 # Player API — Overview & Setup
 
 The Kamigotchi Player API is a set of on-chain **System contracts** that handle all game actions. This page covers how to set up your environment and call any system.

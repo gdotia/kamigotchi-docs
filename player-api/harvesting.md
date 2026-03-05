@@ -1,3 +1,7 @@
+> **Doc Class:** Core Resource
+> **Canonical Source:** Kamigotchi on-chain contracts on Yominet and the official repository (`Asphodel-OS/kamigotchi`).
+> **Freshness Rule:** Verify mutable values against canonical sources before merge and record updates in `references/data-provenance.md`.
+
 # Harvesting
 
 Harvesting is the core resource-gathering mechanic in Kamigotchi. Players assign Kamis to harvest nodes in rooms to earn items and XP over time.
