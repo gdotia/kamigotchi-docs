@@ -204,6 +204,8 @@ Use `LISTING_ID` from confirmed tx events/indexer output; listing IDs are non-de
 This usually means a failed precondition. Before sending txs, check owner/operator registration status, validate account name length (1-15 bytes), and verify owner ETH covers gas (and listing price for buys).
 7. Account name length confusion:
 Name validation uses **bytes**, not characters. Keep names ASCII and <= 15 bytes.
+8. `fee payer address ... does not exist` during `eth_estimateGas`:
+Your Owner address has never been funded on Yominet. Bridge ETH to Owner first, then retry.
 
 ---
 

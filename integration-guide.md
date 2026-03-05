@@ -204,13 +204,32 @@ if (await hasAccount(ownerAccountId)) {
     );
   }
 
-  const gasEstimate = await registerSystem.executeTyped.estimateGas(
-    operatorSigner.address,
-    accountName
-  );
+  const ownerBalance = await provider.getBalance(ownerSigner.address);
+  if (ownerBalance === 0n) {
+    throw new Error(
+      `Owner has 0 ETH on Yominet (${ownerSigner.address}). Bridge ETH first, then retry register().`
+    );
+  }
+
+  let gasEstimate;
+  try {
+    gasEstimate = await registerSystem.executeTyped.estimateGas(
+      operatorSigner.address,
+      accountName
+    );
+  } catch (err) {
+    const reason =
+      err?.info?.error?.message || err?.shortMessage || err?.reason || err?.message || "";
+    if (reason.includes("does not exist")) {
+      throw new Error(
+        `Owner address ${ownerSigner.address} is not initialized on Yominet yet. Bridge ETH first, then retry register().`
+      );
+    }
+    throw err;
+  }
+
   const gasPrice = (await provider.getFeeData()).gasPrice ?? 2_500_000n;
   const minGasCost = gasEstimate * gasPrice;
-  const ownerBalance = await provider.getBalance(ownerSigner.address);
   if (ownerBalance < minGasCost) {
     throw new Error(
       `Owner needs at least ${ethers.formatEther(minGasCost)} ETH for register() gas, has ${ethers.formatEther(ownerBalance)} ETH`
@@ -228,7 +247,7 @@ if (await hasAccount(ownerAccountId)) {
 
 > **What happens:** `AccountRegisterSystem.executeTyped(operatorAddress, name)` creates a new account entity owned by `msg.sender` (your Owner wallet) and sets the provided address as the Operator. The Operator can then sign routine gameplay transactions on behalf of the account.
 >
-> **If you see `missing revert data`:** pre-check `owner`/`operator` registration state, name length (1-15 bytes), and owner gas balance before sending the tx.
+> **If you see `missing revert data` or `fee payer address ... does not exist`:** pre-check `owner`/`operator` registration state, name length (1-15 bytes), and owner gas balance before sending the tx.
 
 ### Changing the Operator Later
 
