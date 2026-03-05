@@ -175,7 +175,7 @@ await tx.wait();
 console.log("Kamis purchased!");
 ```
 
-> **How to find listing IDs:** Listing IDs are non-deterministic and cannot be derived. To discover active listings, either: (1) parse `Store_SetRecord` events from listing transactions (see [Parsing Transaction Events](entity-discovery.md#parsing-transaction-events)), or (2) query an off-chain indexer if available. There is no on-chain function to enumerate all active listings.
+> **How to find listing IDs:** Listing IDs are non-deterministic and cannot be derived. To discover active listings, either: (1) parse `Store_SetRecord` events from listing transactions (see [Parsing Transaction Events](entity-discovery.md#parsing-transaction-events)), or (2) query the [Kamiden Indexer](indexer.md) via `GetKamiMarketListings({ Size: 500 })` — this is the recommended approach for bots. There is no on-chain function to enumerate all active listings.
 
 **What happens on buy:**
 1. Verifies all listings are active, not expired, and buyer doesn't own them

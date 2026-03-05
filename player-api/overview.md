@@ -11,7 +11,7 @@ If you are starting from zero, run through [Agent Bootstrap](../agent-bootstrap.
 - **Node.js** v18+ and **ethers.js v6**
 - **ESM mode** enabled (`"type": "module"` in `package.json`)
 - **Environment variables** set for `OWNER_PRIVATE_KEY` and `OPERATOR_PRIVATE_KEY`
-- One EOA (Owner) with $ETH on Yominet for gas — the Operator wallet is auto-assigned by Privy on registration (see [Chain Configuration](../chain-configuration.md))
+- Two EOAs: Owner (with $ETH) and Operator (with small $ETH for gas). For bots, generate both yourself — Privy is only for the web UI (see [Chain Configuration](../chain-configuration.md))
 - The World contract address
 
 ```bash
@@ -298,7 +298,92 @@ console.log("WETH balance:", ethers.formatEther(wethBal));
 - **Check if a Kami is alive:** `kamiData.state === "RESTING"` means alive and idle. Other states: `"HARVESTING"` (busy but alive), `"DEAD"` (needs revive).
 - **Check stamina:** `accountData.currStamina` (int32) — decreases per room move. Regenerates over time on-chain.
 - **Check room:** `accountData.room` for the account's current room, `kamiData.room` for a Kami's room (both uint32 room index).
-- **Inventory queries:** The getter system does not include inventory data. For inventory queries, use the `InventoryComponent` directly — see [Entity Discovery](entity-discovery.md) for deriving inventory entity IDs.
+- **Inventory queries:** The getter system does not include inventory data. Use the `ValueComponent` directly — see the [Inventory Queries](#inventory-queries) section below and [Entity Discovery](entity-discovery.md) for deriving inventory entity IDs.
+
+---
+
+## Inventory Queries
+
+The getter system does not return inventory data. To check item balances, resolve the `component.value` component and read inventory entity IDs directly.
+
+### Setup
+
+```javascript
+import { ethers } from "ethers";
+import { provider, ownerSigner, getSystemAddress } from "./kamigotchi.js";
+
+// Resolve the ValueComponent address (same pattern as system resolution)
+async function getComponentAddress(componentName) {
+  const hash = ethers.keccak256(ethers.toUtf8Bytes(componentName));
+  const systemsComponentAddr = await (
+    new ethers.Contract(
+      "0x2729174c265dbBd8416C6449E0E813E88f43D0E7",
+      ["function systems() view returns (address)"],
+      provider
+    )
+  )["systems()"]();
+  const systemsComponent = new ethers.Contract(
+    systemsComponentAddr,
+    ["function getEntitiesWithValue(uint256) view returns (uint256[])"],
+    provider
+  );
+  const entities = await systemsComponent.getEntitiesWithValue(hash);
+  if (entities.length === 0) throw new Error(`Component not found: ${componentName}`);
+  return ethers.getAddress(ethers.toBeHex(entities[0], 20));
+}
+
+const VALUE_ABI = ["function getValue(uint256 entity) view returns (uint256)"];
+const valueAddr = await getComponentAddress("component.value");
+const valueComponent = new ethers.Contract(valueAddr, VALUE_ABI, provider);
+```
+
+### Reading a Specific Item Balance
+
+Inventory entity IDs are derived as `keccak256(abi.encodePacked("inventory.instance", accountId, itemIndex))`:
+
+```javascript
+const accountId = BigInt(ownerSigner.address); // account entity = address as uint256
+
+function getInventoryEntityId(accountId, itemIndex) {
+  return BigInt(
+    ethers.keccak256(
+      ethers.solidityPacked(
+        ["string", "uint256", "uint32"],
+        ["inventory.instance", accountId, itemIndex]
+      )
+    )
+  );
+}
+
+// --- Check common balances ---
+
+// MUSU (item index 1) — primary currency earned from harvesting
+const musuId = getInventoryEntityId(accountId, 1);
+const musuBalance = await valueComponent.getValue(musuId);
+console.log("MUSU:", musuBalance.toString());
+
+// VIPP (item index 2) — VIP Points, earned from specific harvest nodes
+const vippId = getInventoryEntityId(accountId, 2);
+const vippBalance = await valueComponent.getValue(vippId);
+console.log("VIPP:", vippBalance.toString());
+
+// Onyx Shards (item index 100) — in-game form of $ONYX (1 ONYX = 100 shards)
+const onyxId = getInventoryEntityId(accountId, 100);
+const onyxBalance = await valueComponent.getValue(onyxId);
+console.log("Onyx Shards:", onyxBalance.toString());
+
+// Gacha Tickets (item index 10)
+const ticketId = getInventoryEntityId(accountId, 10);
+const ticketBalance = await valueComponent.getValue(ticketId);
+console.log("Gacha Tickets:", ticketBalance.toString());
+
+// Any item — just change the index (see references/game-data.md for full list)
+const woodenStickId = getInventoryEntityId(accountId, 1001);
+const stickBalance = await valueComponent.getValue(woodenStickId);
+console.log("Wooden Sticks:", stickBalance.toString());
+```
+
+> **Note:** `getValue()` returns `0` for entities that don't exist (i.e., items you've never held). This is safe to call for any item index. See [Game Data Reference](../references/game-data.md) for the full item index table.
 
 ---
 
@@ -364,6 +449,26 @@ export async function getSystem(systemId, abi, signer) {
   const address = await getSystemAddress(systemId);
   return new ethers.Contract(address, abi, signer);
 }
+
+// --- Helper: Resolve Component Address ---
+// Components use the same resolution pattern as systems.
+// Hash the component name → query the World registry for its address.
+export async function getComponentAddress(componentName) {
+  if (!systemCache.has(componentName)) {
+    const hash = ethers.keccak256(ethers.toUtf8Bytes(componentName));
+    const systemsComponentAddr = await world["systems()"]();
+    const systemsComponent = new ethers.Contract(
+      systemsComponentAddr,
+      SYSTEMS_COMPONENT_ABI,
+      provider
+    );
+    const entities = await systemsComponent.getEntitiesWithValue(hash);
+    if (entities.length === 0) throw new Error(`Component not found: ${componentName}`);
+    const addr = ethers.getAddress(ethers.toBeHex(entities[0], 20));
+    systemCache.set(componentName, addr);
+  }
+  return systemCache.get(componentName);
+}
 ```
 
 All code examples in this documentation import from this module:
@@ -371,6 +476,7 @@ All code examples in this documentation import from this module:
 ```javascript
 import {
   getSystem,
+  getComponentAddress,
   provider,
   ownerSigner,
   operatorSigner,
@@ -465,3 +571,4 @@ loop:
 | [Portal](portal.md) | ERC721 stake/unstake, ERC20 deposit/withdraw |
 | [Entity Discovery](entity-discovery.md) | Entity ID derivation and lookup |
 | [KamiSwap Marketplace](marketplace.md) | List, buy, offer, cancel |
+| [Kamiden Indexer](indexer.md) | Off-chain gRPC: listings, bids, history, real-time stream |

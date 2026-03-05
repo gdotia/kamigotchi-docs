@@ -36,6 +36,7 @@ This documentation covers the smart contract architecture, chain configuration, 
 - [Goals & Scavenge](player-api/goals-and-scavenge.md) — Community goals, scavenge claims
 - [Gacha / Minting](player-api/minting.md) — Mint, reveal, reroll Kamis; buy tickets
 - [KamiSwap Marketplace](player-api/marketplace.md) — List, buy, offer, and trade Kamis on the in-game marketplace
+- [Kamiden Indexer](player-api/indexer.md) — Off-chain gRPC indexer for marketplace listings, history, and real-time events
 - [Portal (ERC721 / ERC20)](player-api/portal.md) — Deposit/withdraw NFTs and tokens
 
 ### References

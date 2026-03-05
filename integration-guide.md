@@ -14,7 +14,7 @@ If you want the shortest first-run path for a new bot developer, start with [Age
 | **Library** | ethers.js v6 |
 | **Module Mode** | ESM (`"type": "module"` in `package.json`) |
 | **Environment** | `OWNER_PRIVATE_KEY` and `OPERATOR_PRIVATE_KEY` |
-| **Wallet** | One EOA (Owner) with $ETH on Yominet for gas — the Operator wallet is auto-assigned by Privy on registration |
+| **Wallets** | Two EOAs: Owner (with $ETH on Yominet) and Operator (with small $ETH for gas). For bots, you generate both wallets yourself — Privy is only used by the web UI client. |
 | **Network** | Yominet (Chain ID: `428962654539583`) |
 
 ---
@@ -40,7 +40,7 @@ Two options:
 
 **Recommended starting budget:** 0.01 ETH bridged to Yominet.
 
-> **Note:** You only need to fund your **Owner wallet**. The Operator wallet is automatically assigned by Privy when you register an account in-game. For programmatic integrations where you manage the Operator wallet yourself, you'll need to fund it separately for gas.
+> **Note:** For bots and programmatic integrations, you manage both wallets yourself — **Privy is only used by the web UI client**. Fund the Owner wallet for registration and privileged operations, and the Operator wallet with a small amount for gameplay gas.
 
 ---
 
@@ -85,7 +85,7 @@ console.log(`Connected to Yominet (block: ${blockNumber})`);
 
 ## Step 2: Set Up Wallets
 
-Kamigotchi uses a **dual-wallet model**. The official game client handles this via [Privy](https://privy.io) — players connect their external wallet (Owner), and Privy auto-creates an embedded wallet (Operator). For programmatic integrations, you manage both wallets directly:
+Kamigotchi uses a **dual-wallet model**. The official game client handles this via [Privy](https://privy.io) — players connect their external wallet (Owner), and Privy auto-creates an embedded wallet (Operator). **For bots, Privy is not involved** — you generate both wallets yourself and pass the Operator address as a parameter when calling `AccountRegisterSystem`:
 
 ```javascript
 function mustEnv(name) {
@@ -158,6 +158,8 @@ async function getSystem(systemId, abi, signer) {
 
 ## Step 4: Register an Account
 
+Registration is called from the **Owner wallet** and takes the **Operator address** as a parameter. The Operator is not "assigned by Privy" for bots — you simply pass the address of the Operator wallet you generated.
+
 ```javascript
 const REGISTER_ABI = [
   "function executeTyped(address operatorAddress, string name) returns (bytes)",
@@ -166,15 +168,39 @@ const REGISTER_ABI = [
 const registerSystem = await getSystem(
   "system.account.register",
   REGISTER_ABI,
-  ownerSigner // Must use owner wallet
+  ownerSigner // Must use Owner wallet — this becomes the account owner
 );
 
+// operatorSigner.address is the Operator wallet you generated
+// "MyBotAccount" is the in-game display name
 const tx = await registerSystem.executeTyped(
   operatorSigner.address,
   "MyBotAccount"
 );
 const receipt = await tx.wait();
 console.log("Account registered! Tx:", receipt.hash);
+```
+
+> **What happens:** `AccountRegisterSystem.executeTyped(operatorAddress, name)` creates a new account entity owned by `msg.sender` (your Owner wallet) and sets the provided address as the Operator. The Operator can then sign routine gameplay transactions on behalf of the account.
+
+### Changing the Operator Later
+
+If you need to rotate your Operator wallet, use `system.account.set.operator`:
+
+```javascript
+const SET_OPERATOR_ABI = [
+  "function executeTyped(address newOperator) returns (bytes)",
+];
+const setOperatorSystem = await getSystem(
+  "system.account.set.operator",
+  SET_OPERATOR_ABI,
+  ownerSigner // Must use Owner wallet
+);
+
+const newOperator = new ethers.Wallet(newOperatorPrivateKey, provider);
+const tx = await setOperatorSystem.executeTyped(newOperator.address);
+await tx.wait();
+console.log("Operator updated to:", newOperator.address);
 ```
 
 ---

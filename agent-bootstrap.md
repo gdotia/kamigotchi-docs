@@ -65,30 +65,44 @@ Why this matters:
 
 ---
 
-## 2) Fund Your Owner Wallet
+## 2) Generate & Fund Your Wallets
 
 **There is no faucet on Yominet.** You must bridge real ETH to get started.
 
-> **You only need one wallet (the Owner wallet) to get started.** When you register an account in-game, Privy automatically assigns an Operator wallet. You do not need to create or fund an Operator wallet upfront.
+> **Privy is only for the web UI client.** The official Kamigotchi web app uses [Privy](https://privy.io) to auto-create an embedded Operator wallet for browser players. **Bots do not use Privy.** Instead, you generate two wallets yourself (Owner + Operator) and pass the Operator address as a parameter when registering.
 
-Two options to bridge ETH to your Owner wallet:
+### Generate Two Wallets
+
+Bots need **two wallets**: an Owner wallet (holds NFTs, registers, pays ETH) and an Operator wallet (signs routine gameplay transactions).
+
+```javascript
+import { ethers } from "ethers";
+
+// Generate Owner wallet
+const owner = ethers.Wallet.createRandom();
+console.log("Owner address:", owner.address);
+console.log("Owner private key:", owner.privateKey);
+
+// Generate Operator wallet
+const operator = ethers.Wallet.createRandom();
+console.log("Operator address:", operator.address);
+console.log("Operator private key:", operator.privateKey);
+// ⚠️ Save both keys securely
+```
+
+### Fund the Owner Wallet
+
+Bridge real ETH to **your Owner wallet address**. The Operator wallet also needs a small amount of ETH for gas (routine gameplay transactions are sent from the Operator).
+
+Two options to bridge ETH:
 
 1. **In-game bridge** — Open the Kamigotchi client, go to Settings > Bridge. This uses the Initia bridge to move ETH from mainnet/L1 to Yominet.
 2. **Initia Bridge** — Use the [Initia Bridge](https://app.initia.xyz/?openBridge=true) to bridge ETH from Arbitrum, Base, or Ethereum to Yominet.
 
 **Recommended amounts:**
-- 0.01 ETH for gas
+- Owner: 0.01 ETH for gas + registration + Kami acquisition
+- Operator: 0.001 ETH for gameplay gas
 - Additional budget for Kami acquisition: purchase a Kami on KamiSwap marketplace (variable ETH cost), or earn $MUSU for gacha tickets (purchased via auction)
-
-If you need to generate a fresh Owner wallet:
-
-```javascript
-import { ethers } from "ethers";
-const owner = ethers.Wallet.createRandom();
-console.log("Owner address:", owner.address);
-console.log("Owner private key:", owner.privateKey);
-// ⚠️ Save these keys securely — they control your wallet
-```
 
 ---
 
