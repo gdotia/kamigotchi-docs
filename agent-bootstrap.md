@@ -20,32 +20,29 @@ Why this matters:
 
 ---
 
-## 2) Fund Your Wallets
+## 2) Fund Your Owner Wallet
 
 **There is no faucet on Yominet.** You must bridge real ETH to get started.
 
-Two options to fund your wallets:
+> **You only need one wallet (the Owner wallet) to get started.** When you register an account in-game, Privy automatically assigns an Operator wallet. You do not need to create or fund an Operator wallet upfront.
+
+Two options to bridge ETH to your Owner wallet:
 
 1. **In-game bridge** — Open the Kamigotchi client, go to Settings > Bridge. This uses the Initia bridge to move ETH from mainnet/L1 to Yominet.
-2. **gas.zip** — A third-party bridge aggregator that supports Yominet.
-
-Fund **both** your Owner and Operator wallets with ETH for gas.
+2. **Initia Bridge** — Use the [Initia Bridge](https://app.initia.xyz/?openBridge=true) to bridge ETH from Ethereum mainnet to Yominet.
 
 **Recommended amounts:**
-- 0.01 ETH per wallet for gas
+- 0.01 ETH for gas
 - Additional budget for Kami acquisition: 0.005+ ETH for the Newbie Vendor, or $MUSU for gacha tickets (purchased via auction)
 
-If you need to generate fresh wallets:
+If you need to generate a fresh Owner wallet:
 
 ```javascript
 import { ethers } from "ethers";
 const owner = ethers.Wallet.createRandom();
-const operator = ethers.Wallet.createRandom();
 console.log("Owner address:", owner.address);
 console.log("Owner private key:", owner.privateKey);
-console.log("Operator address:", operator.address);
-console.log("Operator private key:", operator.privateKey);
-// ⚠️ Save these keys securely — they control your wallets
+// ⚠️ Save these keys securely — they control your wallet
 ```
 
 ---

@@ -11,7 +11,7 @@ If you are starting from zero, run through [Agent Bootstrap](../agent-bootstrap.
 - **Node.js** v18+ and **ethers.js v6**
 - **ESM mode** enabled (`"type": "module"` in `package.json`)
 - **Environment variables** set for `OWNER_PRIVATE_KEY` and `OPERATOR_PRIVATE_KEY`
-- Two EOAs (Owner + Operator) with $ETH on Yominet for gas (see [Chain Configuration](../chain-configuration.md))
+- One EOA (Owner) with $ETH on Yominet for gas — the Operator wallet is auto-assigned by Privy on registration (see [Chain Configuration](../chain-configuration.md))
 - The World contract address
 
 ```bash

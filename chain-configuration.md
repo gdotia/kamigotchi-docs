@@ -62,7 +62,7 @@ const provider = new ethers.JsonRpcProvider(
 
 ## Bridging
 
-ETH on Yominet is **bridged via LayerZero** from Ethereum mainnet. Both your **Owner wallet** and **Operator wallet** need ETH for gas.
+ETH on Yominet is **bridged via LayerZero** from Ethereum mainnet. Your **Owner wallet** needs ETH for gas. The Operator wallet is automatically assigned by Privy when you register an account in-game.
 
 > **There is no faucet.** You must bridge real ETH to Yominet to get gas tokens.
 
@@ -78,14 +78,14 @@ The Kamigotchi client includes a built-in bridge powered by the Initia bridge.
 
 This is the simplest option if you already have the Kamigotchi client running.
 
-### Option 2: gas.zip
+### Option 2: Initia Bridge
 
-[gas.zip](https://gas.zip) is a multi-chain gas bridge that supports Yominet.
+The [Initia Bridge](https://app.initia.xyz/?openBridge=true) supports bridging ETH to Yominet.
 
-1. Go to [gas.zip](https://gas.zip)
+1. Go to the [Initia Bridge](https://app.initia.xyz/?openBridge=true)
 2. Select **Yominet** as the destination chain
-3. Enter the destination wallet address (your Owner or Operator wallet)
-4. Send ETH from any supported source chain
+3. Enter the destination wallet address (your Owner wallet)
+4. Send ETH from Ethereum mainnet
 5. Funds arrive as native ETH on Yominet
 
 ### Recommended Funding Amounts

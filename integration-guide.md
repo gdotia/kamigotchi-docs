@@ -14,7 +14,7 @@ If you want the shortest first-run path for a new bot developer, start with [Age
 | **Library** | ethers.js v6 |
 | **Module Mode** | ESM (`"type": "module"` in `package.json`) |
 | **Environment** | `OWNER_PRIVATE_KEY` and `OPERATOR_PRIVATE_KEY` |
-| **Wallet** | Two EOAs (Owner + Operator) with $ETH on Yominet for gas |
+| **Wallet** | One EOA (Owner) with $ETH on Yominet for gas — the Operator wallet is auto-assigned by Privy on registration |
 | **Network** | Yominet (Chain ID: `428962654539583`) |
 
 ---
@@ -26,7 +26,7 @@ If you want the shortest first-run path for a new bot developer, start with [Age
 Two options:
 
 1. **In-game bridge** — Open the Kamigotchi client, go to Settings > Bridge (uses the Initia bridge).
-2. **gas.zip** — A third-party bridge aggregator that supports Yominet.
+2. **Initia Bridge** — Use the [Initia Bridge](https://app.initia.xyz/?openBridge=true) to bridge ETH from Ethereum mainnet to Yominet.
 
 **Cost summary:**
 
@@ -40,7 +40,7 @@ Two options:
 
 **Recommended starting budget:** 0.2-0.5 ETH bridged to Yominet.
 
-> **Note:** Fund **both** your Owner and Operator wallets. Both need ETH for gas since they each submit transactions.
+> **Note:** You only need to fund your **Owner wallet**. The Operator wallet is automatically assigned by Privy when you register an account in-game. For programmatic integrations where you manage the Operator wallet yourself, you'll need to fund it separately for gas.
 
 ---
 
