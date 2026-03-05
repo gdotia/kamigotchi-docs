@@ -218,6 +218,68 @@ Once registered with a Kami, a bot's core loop looks like this:
 
 ---
 
+## Choosing Your First Kami
+
+After registering, you need a Kami to play. The primary way to acquire one is **KamiSwap** (`system.kamimarket.buy`) — the in-game marketplace where players list Kamis for ETH. The **Owner wallet** pays for the purchase, and the Kami is assigned to your shared account entity (accessible by both Owner and Operator).
+
+When choosing a Kami, look at:
+
+- **Body trait** — determines affinity (Normal, Eerie, Insect, Scrap) and base stat bonuses
+- **Hand trait** — also carries an affinity, affects harvest efficacy alongside body
+- **Base stats** — every Kami starts with 50 HP / 10 Power / 10 Violence / 10 Harmony, modified by traits
+
+### Recommended: Normal-Affinity Harvester
+
+For a safe, efficient farming bot, pick a **Normal-affinity body with high base Harmony**. Normal affinity gets a half-bonus at *all* node types (jack-of-all-trades), and Harmony reduces harvest strain (HP drain).
+
+**Best body pick: Plant** (index 20, Normal, Uncommon) — +5 Harmony, giving **15 base Harmony at level 1**. This is the highest Harmony bonus among Normal-affinity bodies.
+
+Other Normal bodies for reference:
+
+| Body | Rarity | HP | Pow | Vio | **Harm** | Slots |
+|------|--------|-----|-----|-----|----------|-------|
+| Plant | Uncommon | 0 | 0 | 0 | **+5** | 0 |
+| Orb | Common | 0 | 0 | 0 | **+4** | 0 |
+| Suit | Legendary | 0 | 0 | 6 | **+3** | 0 |
+| Ghost | Common | 10 | 1 | 1 | +1 | 0 |
+| Magatama | Rare | 30 | 3 | 0 | 0 | 0 |
+
+> See [Game Data Reference — Body Traits](references/game-data.md#body-traits) for the full trait table.
+
+---
+
+## Starter Build: Guardian Tree (Levels 1–30)
+
+This build maximizes harvest survivability — high Harmony (reduces strain), high HP (buffer before danger), and Intensity bonuses (more time before strain ramps up).
+
+### Skill Point Allocation
+
+| Phase | Tier | Skills (points each) | Total Pts | Cumulative | Gains |
+|-------|------|----------------------|-----------|------------|-------|
+| 1 | T1 | 5× Defensiveness, 5× Toughness, 5× Patience | 15 | 15 | +5 Harmony, +50 HP, +25 Intensity/hr |
+| 2 | T2 | 5× Vigor, 4× Armor | 9 | 24 | +50 HP, +8% Defense Type Shift |
+| 3 | T3 | Anxiety (pick 1 of 3) | 1 | 25 | +3 Harmony |
+| 4 | T4 | 5× Dedication | 5 | 30 | +25 Intensity/hr |
+
+**Level 30 totals from skills:** +8 Harmony, +100 HP, +50 Intensity/hr, +8% DTS
+
+Combined with a Plant body, your Kami reaches **23 effective Harmony** (10 base + 5 body + 8 skills) before equipment — making it very resilient to harvest strain and hard for predators to kill profitably.
+
+### Why Guardian over Harvester/Predator?
+
+| Tree | Playstyle | Early-Game Risk |
+|------|-----------|-----------------|
+| **Guardian** | Survive longer, harvest safely | Low — hard to kill, forgiving for AFK |
+| Harvester | Higher MUSU yield per hour | Medium — less tanky, relies on Power for bounty |
+| Predator | Kill other Kamis for spoils | High — needs Violence investment, risky PvP |
+| Enlightened | Rest faster, fertility bonuses | Medium — good yield but less durable |
+
+For a first bot, Guardian is the safest path. You can always respec later with a Respec Potion (item 11403) or ONYX.
+
+> **Skill reference:** See [Game Data Reference — Skills](references/game-data.md#skills) for all 72 skills across 4 trees.
+
+---
+
 ## Next Docs
 
 1. [Integration Guide](integration-guide.md) for full account + first-Kami setup.
