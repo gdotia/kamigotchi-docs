@@ -66,7 +66,7 @@ console.log("Account registered!");
 - The operator wallet can be changed later with `set.operator()`.
 - In the official client, Privy creates and manages the operator wallet automatically.
 - **Starting room:** New accounts are placed in **Room 1** (Misty Riverside). The contract sets `IndexRoomComponent` to `1` in `LibAccount.create()`.
-- Initial stamina and move cost are on-chain config values (`ACCOUNT_STAMINA` indices 0 and 2). Query the config component for exact values.
+- Initial stamina and move cost are on-chain config values (`ACCOUNT_STAMINA`). Full config indices: 0 = base stamina, 1 = recovery period (seconds per 1 stamina point recovered), 2 = move cost, 3 = XP per move. Query the config component for exact values.
 
 ---
 
@@ -196,6 +196,10 @@ const tx = await system.executeTyped("Kami breeder & harvesting enthusiast 🌾"
 await tx.wait();
 ```
 
+### Notes
+
+- Bio must be 1-140 bytes. Exceeding 140 bytes reverts with `"Account: bio cannot exceed 140chars"`.
+
 ---
 
 ## set.pfp()
@@ -229,6 +233,10 @@ const system = await getSystem("system.account.set.pfp", ABI, operatorSigner);
 const tx = await system.executeTyped(favoriteKamiId);
 await tx.wait();
 ```
+
+### Notes
+
+- The Kami must be owned by the caller's account. If not, the transaction reverts with `"kami not urs"`.
 
 ---
 
@@ -306,6 +314,42 @@ console.log("Operator updated");
 
 - The old operator wallet immediately loses access.
 - Make sure the new operator wallet has $ETH for gas.
+
+---
+
+## use.item()
+
+Use a consumable item on the account.
+
+| Property | Value |
+|----------|-------|
+| **System ID** | `system.account.use.item` |
+| **Wallet** | 🎮 Operator |
+| **Gas** | Default |
+
+### Parameters
+
+| Name | Type | Description |
+|------|------|-------------|
+| `itemIndex` | `uint32` | Index of the item to use |
+| `amt` | `uint256` | Amount of the item to consume |
+
+### Description
+
+Uses consumable items on the player's account (stamina potions, XP potions, etc.). The item must have shape "ACCOUNT" and meet "USE" requirements. Syncs stamina before applying the item effect.
+
+### Code Example
+
+```javascript
+import { getSystem, ownerSigner, operatorSigner } from "./kamigotchi.js";
+
+const ABI = ["function executeTyped(uint32 itemIndex, uint256 amt) returns (bytes)"];
+const system = await getSystem("system.account.use.item", ABI, operatorSigner);
+
+const tx = await system.executeTyped(itemIndex, 1n);
+await tx.wait();
+console.log("Item used on account!");
+```
 
 ---
 

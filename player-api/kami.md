@@ -270,7 +270,9 @@ Use an item on a Kami (e.g., feed, heal).
 
 ### Description
 
-Uses a consumable item on a Kami. Common use cases include feeding (restoring health) and applying buffs. The item is consumed from inventory.
+Uses a consumable item on a Kami. Common use cases include feeding (restoring health) and applying buffs. The item is consumed from inventory. The Kami must pass a **cooldown check** (`LibKami.verifyCooldown`) — if on cooldown, the call reverts. The Kami must also be in the **same room** as the account (`LibKami.verifyRoom`).
+
+> **Bot warning:** Using an item resets the Kami's harvest intensity timer (`LibKami.resetIntensity`) and may reset harvest bonuses (`LibBonus.resetUponHarvestAction`). If your Kami is mid-harvest, using items will reset intensity accumulation.
 
 ### Code Example
 
@@ -305,7 +307,7 @@ Cast an item on an enemy Kami.
 
 ### Description
 
-Casts a combat item at an enemy Kami. Used in PvP or PvE scenarios to apply debuffs or deal damage.
+Casts a combat item at an enemy Kami. Used in PvP or PvE scenarios to apply debuffs or deal damage. Each cast costs **10 stamina** (`LibAccount.depleteStamina(components, accID, 10)`). The caster's Kami must be in the **same room** as the target Kami (`LibKami.verifyRoom`).
 
 ### Code Example
 

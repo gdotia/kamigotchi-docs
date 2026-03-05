@@ -55,8 +55,9 @@ Components are on-chain key-value stores, keyed by **entity ID** (`uint256`). Th
 | `PowerComponent` | Kami power stats |
 | `HarmonyComponent` | Kami harmony stats |
 | `ViolenceComponent` | Kami violence stats |
-| `InventoryComponent` | Account item inventory |
-| `PositionComponent` | Account room position |
+| `IDOwnsInventoryComponent` | Inventory ownership mapping (holder entity ID) |
+| `ValueComponent` | Inventory quantity / generic value storage |
+| `IndexRoomComponent` | Account room index |
 | ... | Many more |
 
 ### Entities
@@ -64,7 +65,7 @@ Components are on-chain key-value stores, keyed by **entity ID** (`uint256`). Th
 Every game object is an **entity** — a `uint256` identifier. Entities have no inherent meaning; their type is defined by which components are attached:
 
 - A **Kami** entity has `HealthComponent`, `PowerComponent`, `HarmonyComponent`, `ViolenceComponent`, etc.
-- An **Account** entity has `InventoryComponent`, `PositionComponent`, etc.
+- An **Account** entity has `IDOwnsInventoryComponent`, `IndexRoomComponent`, etc.
 - A **Trade** entity has trade-specific components
 
 ---

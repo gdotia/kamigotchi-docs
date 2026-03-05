@@ -43,7 +43,7 @@ console.log("Skill upgraded!");
 ### Notes
 
 - Reverts if the Kami has no available skill points.
-- Skill indices, names, costs, max levels, and tree tiers are defined in the skill registry (loaded from CSV at deployment). Each skill has a cost in skill points, a max level, and belongs to a tree with a tier. Skills are currently only for Kamis (`for_` = `"KAMI"`).
+- Skill indices, names, costs, max levels, and tree tiers are defined in the skill registry (loaded from CSV at deployment). Each skill has a cost in skill points, a max level, and belongs to a tree with a tier. Skills can target either Kamis (`for_` = `"KAMI"`) or Accounts (`for_` = `"ACCOUNT"`). The contract verifies ownership accordingly: for Kami skills, it checks kami ownership and requires `RESTING` state; for Account skills, it checks account ownership.
 - Skill levels may have caps.
 
 ---

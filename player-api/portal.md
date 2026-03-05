@@ -57,6 +57,7 @@ console.log("Kami staked into game world!");
 - **Prerequisite:** Your account must be in **Room 12 (Scrap Confluence)**. Call `account.move(12)` first.
 - **Requires NFT approval** before staking — approve the World contract as the operator.
 - Must use the **owner wallet** (the one that holds the NFT).
+- Active marketplace listings for the Kami are automatically cancelled during staking.
 - For batch staking, see `ERC721.kami.batch.stake()` below.
 
 ---
@@ -100,6 +101,7 @@ console.log("Kami withdrawn to wallet!");
 - **Prerequisite:** Your account must be in **Room 12 (Scrap Confluence)**. Call `account.move(12)` first.
 - The Kami must not be actively harvesting or in any locked state.
 - Stop all harvests and remove equipment before unstaking.
+- Soulbound Kamis cannot be unstaked. The soulbound period (e.g., 3 days after Newbie Vendor purchase) must expire first.
 
 ---
 
@@ -453,7 +455,7 @@ Withdraw ERC-20 tokens from the game world.
 
 #### Description
 
-Initiates a withdrawal of ERC-20 tokens from the game world back to the owner's wallet. Withdrawals have a **pending period** (configured per token via the `TOKEN_PORTAL_WITHDRAW_DELAY` config) before they can be claimed with `ERC20.claim()`. During the pending period, you can cancel the withdrawal with `ERC20.cancel()` to return the tokens to your in-game inventory.
+Initiates a withdrawal of ERC-20 tokens from the game world back to the owner's wallet. Withdrawals have a **pending period** (configured per token via the `PORTAL_TOKEN_EXPORT_DELAY` config) before they can be claimed with `ERC20.claim()`. During the pending period, you can cancel the withdrawal with `ERC20.cancel()` to return the tokens to your in-game inventory.
 
 #### Code Example
 
@@ -543,7 +545,7 @@ Cancel a pending ERC-20 withdrawal.
 
 #### Description
 
-Cancels a pending withdrawal. The tokens are returned to the player's in-game inventory instead of being sent to the wallet.
+Cancels a pending withdrawal. The tokens are returned to the player's in-game inventory instead of being sent to the wallet. Note that the export tax charged during `withdraw()` is **not refunded** on cancellation.
 
 #### Code Example
 

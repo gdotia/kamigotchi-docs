@@ -13,6 +13,25 @@ Quick reference for common Solidity revert messages across Kamigotchi systems. T
 | `"Account: name cannot be empty"` | Empty string passed as name |
 | `"Account: name must be < 16chars"` | Name exceeds 16 bytes |
 | `"Account: name taken"` | Another account already uses this name |
+| `"LibAccount: account not whitelisted"` | World is in private mode and the account is not whitelisted |
+
+---
+
+## Account Settings (`system.account.set.*`)
+
+| Revert Message | Cause |
+|----------------|-------|
+| `"Account: Operator already in use"` | The new operator address is already assigned to another account (`set.operator`) |
+| `"Account: bio cannot exceed 140chars"` | Bio exceeds 140 bytes (`set.bio`) |
+
+---
+
+## Account Move (`system.account.move`)
+
+| Revert Message | Cause |
+|----------------|-------|
+| `"AccMove: unreachable room"` | Target room is not connected to current room |
+| `"AccMove: inaccessible room"` | Target room has a gate condition the account doesn't meet |
 
 ---
 

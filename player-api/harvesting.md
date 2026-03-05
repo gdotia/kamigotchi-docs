@@ -63,6 +63,7 @@ console.log("Harvesting started for 3 Kamis");
 - A newly purchased or minted Kami starts in the account's current room.
 - Kamis already assigned to a harvest will cause the transaction to revert.
 - Each harvest node has a maximum capacity — check room data for availability.
+- Nodes may have additional requirements (e.g., minimum Kami level) enforced by `LibNode.verifyRequirements()` — check node data before starting.
 - Move to the room first with [account.move()](account.md#move) before starting a harvest.
 - **Batch variant:** `executeBatched(uint256[] kamiIDs, uint32 nodeIndex, uint256 taxerID, uint256 taxAmt)` starts harvests for multiple Kamis in one transaction.
 
@@ -273,6 +274,7 @@ All of the following must be true or the transaction reverts:
 
 - The victim's harvest bounty is split — a portion goes to the victim as "salvage" (based on their Power), the rest becomes "spoils" for the attacker (based on attacker's Power)
 - The attacker takes health "recoil" damage from the kill (based on strain and karma)
+- The victim receives **salvage** (MUSU) based on their Power stat, plus **XP equal to the salvage amount**
 - The victim's Kami dies (state → `"DEAD"`) and their harvest stops
 - The attacker's liquidation cooldown is reset
 
@@ -284,18 +286,12 @@ All of the following must be true or the transaction reverts:
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
 │ harvest.     │     │ harvest.     │     │ harvest.     │
 │ start()      │────▶│ collect()    │────▶│ stop()       │
-│              │     │ (partial)    │     │              │
-└─────────────┘     └─────────────┘     └──────┬───────┘
-                                               │
-                                               ▼
-                                        ┌─────────────┐
-                                        │ harvest.     │
-                                        │ collect()    │
-                                        │ (final)      │
-                                        └─────────────┘
+│              │     │ (partial)    │     │ (auto-collects│
+└─────────────┘     └─────────────┘     │  + sets RESTING)│
+                                         └─────────────┘
 ```
 
-You can also collect and stop in any order — collecting after stopping works fine.
+**Important:** `harvest.stop()` automatically collects any remaining bounty, then sets the Kami to RESTING state with a zeroed balance. You **cannot** call `harvest.collect()` after stopping — the contract requires the Kami to be in HARVESTING state for collection. Always collect *before* stopping if you want a separate collect step, or simply call stop (which auto-collects).
 
 ---
 
@@ -406,7 +402,7 @@ struct Stat { int32 base; int32 shift; int32 boost; int32 sync; }
 | `boost` | Temporary buffs from equipment, skills, and active effects |
 | `sync` | The last on-chain synced value — updated when the chain processes a harvest collect, stop, or other state-changing action |
 
-**Effective stat value** = `base + shift + boost`. The `sync` field reflects the last computed on-chain snapshot and may lag behind the real-time effective value during active harvests (since health drains continuously but only syncs on actions).
+**Effective stat value** = `((1000 + boost) × (base + shift)) / 1000`, floored to 0 if negative. The `boost` field is a **percentage multiplier in parts per thousand** — for example, `boost = 100` means +10%, `boost = -200` means -20%. It is **not** simply added to base + shift. The `sync` field reflects the last computed on-chain snapshot and may lag behind the real-time effective value during active harvests (since health drains continuously but only syncs on actions).
 
 ### Monitoring During Harvest
 
@@ -417,7 +413,7 @@ const getter = new ethers.Contract(getterAddr, GETTER_ABI, provider);
 async function checkHealth(kamiEntityId) {
   const kami = await getter.getKami(kamiEntityId);
   const h = kami.stats.health;
-  const effective = Number(h.base) + Number(h.shift) + Number(h.boost);
+  const effective = Math.max(0, ((1000 + Number(h.boost)) * (Number(h.base) + Number(h.shift))) / 1000);
   console.log(`Health: ${effective} (base=${h.base} shift=${h.shift} boost=${h.boost} sync=${h.sync})`);
   return effective;
 }
@@ -441,7 +437,39 @@ const interval = setInterval(async () => {
 - **< 50** — Conservative healing threshold. Feed before reaching zero.
 - **> 100** — Safe range for most harvests.
 
-There is no exact formula published for the drain rate, but empirically: a low-level Kami with base stats drains roughly 1 HP per minute. Higher Harmony and "Strain Bonus" skills reduce this significantly.
+Health drain (strain) is calculated by `LibKami.calcStrain` each time a harvest is synced:
+
+```
+strain = ceil(amt × core × boost / (precision × (harmony + nudge)))
+```
+
+Where:
+- **amt** = MUSU earned (the bounty being collected), NOT time elapsed
+- **core** = base strain multiplier from config
+- **boost** = strain boost modifier (skills/equipment can reduce this)
+- **precision** = config precision divisor
+- **harmony** = Kami's effective Harmony stat
+- **nudge** = small constant to prevent division by zero
+
+Config key: `KAMI_HARV_STRAIN`. Higher Harmony means less strain per unit of bounty collected. Strain is proportional to harvest output — a Kami earning more MUSU takes more health damage.
+
+### Resting Recovery
+
+When a Kami is in RESTING state (after `harvest.stop()`), it recovers HP over time via `LibKami.calcRecovery`:
+
+```
+metabolism = (precision × (harmony + nudge) × ratio × boost) / 3600
+recovery = (duration × metabolism) / 10^9
+```
+
+Where:
+- **harmony** = Kami's effective Harmony stat
+- **nudge** = small constant to prevent division by zero
+- **ratio** = recovery rate multiplier from config
+- **boost** = recovery boost modifier (skills/equipment)
+- **duration** = seconds spent resting since last sync
+
+Config key: `KAMI_REST_METABOLISM`. Higher Harmony means faster HP recovery while resting.
 
 ---
 

@@ -250,7 +250,7 @@ Each Kami can only have **one harvest at a time**. The harvest entity ID is alwa
 
 ## Trade Entity IDs
 
-Trade entity IDs are **generated on-chain** using `world.getUniqueEntityId()` (an auto-incrementing counter). They cannot be predicted client-side.
+Trade entity IDs are **generated on-chain** using `world.getUniqueEntityId()`, which computes `keccak256(abi.encodePacked(++nonce))`. The nonce increments, but the resulting entity IDs are keccak hashes — large seemingly-random `uint256` values, **not** sequential integers. They cannot be predicted client-side.
 
 ### From the `trade.create()` Return Value
 
@@ -389,7 +389,7 @@ function getQuestRegistryEntityId(questIndex) {
 | **Kami** | `keccak256("kami.id", kamiIndex)` | ✅ Yes |
 | **Harvest** | `keccak256("harvest", kamiEntityId)` | ✅ Yes |
 | **Quest (instance)** | `keccak256("quest.instance", questIndex, accountId)` | ✅ Yes |
-| **Trade** | `world.getUniqueEntityId()` — auto-increment | ❌ No (read from return value or events) |
+| **Trade** | `world.getUniqueEntityId()` — `keccak256(++nonce)` | ❌ No (read from return value or events) |
 | **Room** | `keccak256("room", roomIndex)` | ✅ Yes |
 | **Node** | `keccak256("node", nodeIndex)` | ✅ Yes |
 | **Item (registry)** | `keccak256("registry.item", itemIndex)` | ✅ Yes |
@@ -630,7 +630,7 @@ await new Promise((r) => setTimeout(r, 2000));
 await revealSystem.reveal(commitIds);
 ```
 
-> **Note:** The `extractEntityIds` function returns ALL entity IDs created or modified in a transaction. For complex transactions that touch many entities, you may need to filter by component table ID or deduplicate. In practice, the non-deterministic IDs (from `world.getUniqueEntityId()`) are distinguishable because they are sequential integers, while deterministic IDs are large keccak hashes.
+> **Note:** The `extractEntityIds` function returns ALL entity IDs created or modified in a transaction. For complex transactions that touch many entities, you may need to filter by component table ID or deduplicate. In practice, both deterministic IDs and non-deterministic IDs (from `world.getUniqueEntityId()`) are large keccak hashes. You may need to filter by component table ID to distinguish them.
 
 ---
 

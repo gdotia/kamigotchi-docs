@@ -338,10 +338,11 @@ console.log("Batch accepted — 3 Kamis sold!");
 **What happens on accept:**
 1. Verifies offer is active, not expired, and seller doesn't own the offer
 2. Verifies seller owns the Kami and it's `RESTING` or `LISTED` (not soulbound)
-3. For collection offers: decrements remaining quantity
-4. WETH is pulled from buyer → fee to treasury, remainder to seller
-5. Kami ownership reassigned via `IDOwnsKami`
-6. Sale price fed into TWAP oracle
+3. **If the Kami has an active listing, all listings for that Kami are automatically cancelled** when the offer is accepted
+4. For collection offers: decrements remaining quantity
+5. WETH is pulled from buyer → fee to treasury, remainder to seller
+6. Kami ownership reassigned via `IDOwnsKami`
+7. Sale price fed into TWAP oracle
 
 ### 4. Cancel an Offer
 
@@ -567,6 +568,34 @@ main().catch(console.error);
 | Newbie Vendor | **ETH** (native) | `msg.value` — buyer sends ETH with the transaction |
 
 > **Why the difference?** Listings are instant purchases (buyer initiates and pays in one tx), so native ETH works. Offers require the seller to accept later, so WETH's ERC-20 approval mechanism enables trustless settlement without escrow.
+
+---
+
+## NPC Merchant Shops
+
+NPC merchant item shops are **separate from KamiSwap** and handle buying/selling fungible items (potions, materials, etc.) from in-game NPC merchants using in-game currency (e.g., $MUSU) — not ETH/WETH.
+
+| System ID | Description |
+|-----------|-------------|
+| `system.listing.buy` | Buy items from an NPC merchant |
+| `system.listing.sell` | Sell items to an NPC merchant |
+
+```solidity
+// Both systems share the same parameter signature
+function executeTyped(uint32 merchantIndex, uint32[] itemIndices, uint32[] amts) returns (bytes)
+// merchantIndex — the NPC merchant's entity index
+// itemIndices   — which items to buy/sell (indices into the merchant's inventory)
+// amts          — quantities for each item
+```
+
+**Key details:**
+
+- **Proximity required** — the player must be in the same room as the NPC merchant
+- **Pricing models** — merchants support **FIXED** pricing and **GDA** (Gradual Dutch Auction) dynamic pricing, where prices adjust based on supply/demand over time
+- **Conditional requirements** — some items may have purchase conditions enforced via `LibConditional` (e.g., minimum level, quest completion)
+- **Currency** — transactions use in-game item currency (e.g., $MUSU), not ETH or WETH
+
+These systems are distinct from the KamiSwap P2P marketplace documented above.
 
 ---
 

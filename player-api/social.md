@@ -100,11 +100,12 @@ Cancel a request, remove a friend, or remove a block.
 
 ### Description
 
-A multipurpose function that handles three scenarios based on the entity's current state:
+A multipurpose function that handles four scenarios based on the entity's current state:
 
 | State | Action |
 |-------|--------|
 | Pending request (outgoing) | Cancels the friend request |
+| Pending request (incoming) | Declines the friend request |
 | Active friendship | Removes the friend |
 | Active block | Unblocks the account |
 
