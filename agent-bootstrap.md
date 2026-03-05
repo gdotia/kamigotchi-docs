@@ -69,59 +69,80 @@ Why this matters:
 
 ---
 
-## 2) Generate & Fund Your Wallets
+## 2) Choose Bootstrap Inputs
 
-**There is no faucet on Yominet.** You must bridge real ETH to get started.
+**There is no faucet on Yominet.** The end-to-end agent bootstrap starts from a single owner wallet funded with ETH on **Base**.
 
-> **Privy is only for the web UI client.** The official Kamigotchi web app uses [Privy](https://privy.io) to auto-create an embedded Operator wallet for browser players. **Bots do not use Privy.** Instead, you generate two wallets yourself (Owner + Operator) and pass the Operator address as a parameter when registering.
+The user chooses only:
 
-### Generate Two Wallets
+- `OWNER_PRIVATE_KEY` — the owner wallet private key
+- `BRIDGE_AMOUNT_ETH` — how much ETH to bridge from Base to Yominet
+- `KAMI_ACCOUNT_NAME` — the account name to register (`1-15` bytes)
 
-Bots need **two wallets**: an Owner wallet (holds NFTs, registers, pays ETH) and an Operator wallet (signs routine gameplay transactions).
+Your bootstrap/runtime should then:
 
-```javascript
-import { ethers } from "ethers";
+1. Derive the Yominet bridge recipients from `OWNER_PRIVATE_KEY`
+2. Derive a **distinct** operator wallet from the owner key
+3. Transfer a small amount of bridged ETH to that derived operator before gameplay transactions
+4. Pull active KamiSwap listings so the bot can choose a first Kami
 
-// Generate Owner wallet
-const owner = ethers.Wallet.createRandom();
-console.log("Owner address:", owner.address);
-console.log("Owner private key:", owner.privateKey);
+> **Do not reuse the owner address as the operator address in this bootstrap flow.** The operator is derived from the owner, but it must be a different address.
 
-// Generate Operator wallet
-const operator = ethers.Wallet.createRandom();
-console.log("Operator address:", operator.address);
-console.log("Operator private key:", operator.privateKey);
-// ⚠️ Save both keys securely
+### Bridge from Base
+
+Use the working Base -> Yominet route in [Yominet Bridge Tooling](tools/yominet-bridge/README.md):
+
+```bash
+cd /home/matrix/kamigotchi-docs/tools/yominet-bridge
+npm init -y
+npm i ethers @initia/initia.js
+
+export OWNER_PRIVATE_KEY=0xYOUR_OWNER_PRIVATE_KEY
+export BRIDGE_AMOUNT_ETH=0.01
+
+export PRIVATE_KEY="$OWNER_PRIVATE_KEY"
+
+# Preview the derived destination addresses
+export PRINT_ADDRESSES=1
+node bridge-live.mjs
+
+# Quote without sending
+unset PRINT_ADDRESSES
+export DRY_RUN=1
+node bridge-live.mjs
+
+# Send the bridge tx
+unset DRY_RUN
+node bridge-live.mjs
 ```
 
-### Fund the Owner Wallet
+After the bridge completes:
 
-Bridge real ETH to **your Owner wallet address**. The Operator wallet also needs a small amount of ETH for gas (routine gameplay transactions are sent from the Operator).
+- Keep most of the bridged ETH on the Owner for registration and KamiSwap buys
+- Transfer a small amount of ETH to the derived Operator for gameplay gas
 
-Two options to bridge ETH:
-
-1. **In-game bridge** — Open the Kamigotchi client, go to Settings > Bridge. This uses the Initia bridge to move ETH from mainnet/L1 to Yominet.
-2. **Initia Bridge** — Use the [Initia Bridge](https://app.initia.xyz/?openBridge=true) to bridge ETH from Arbitrum, Base, or Ethereum to Yominet.
-
-**Recommended amounts:**
-- Owner: 0.01 ETH for gas + registration + Kami acquisition
-- Operator: 0.001 ETH for gameplay gas
-- Additional budget for Kami acquisition: purchase a Kami on KamiSwap marketplace (variable ETH cost), or earn $MUSU for gacha tickets (purchased via auction)
+**Recommended split of a `0.01 ETH` bridge:**
+- Owner: ~`0.009 ETH` for registration + first Kami
+- Operator: ~`0.001 ETH` for gameplay gas
 
 ---
 
-## 3) Set Required Environment Variables
+## 3) Export the Low-Level Runtime Variables
+
+Once your bootstrap/runtime has derived the operator key, export both keys for the low-level scripts below:
 
 ```bash
 # Linux/macOS
 export OWNER_PRIVATE_KEY=0xYOUR_OWNER_PRIVATE_KEY
-export OPERATOR_PRIVATE_KEY=0xYOUR_OPERATOR_PRIVATE_KEY
+export OPERATOR_PRIVATE_KEY=0xYOUR_DERIVED_OPERATOR_PRIVATE_KEY
+export KAMI_ACCOUNT_NAME=MyBot01
 ```
 
 ```powershell
 # Windows PowerShell
 $env:OWNER_PRIVATE_KEY="0xYOUR_OWNER_PRIVATE_KEY"
-$env:OPERATOR_PRIVATE_KEY="0xYOUR_OPERATOR_PRIVATE_KEY"
+$env:OPERATOR_PRIVATE_KEY="0xYOUR_DERIVED_OPERATOR_PRIVATE_KEY"
+$env:KAMI_ACCOUNT_NAME="MyBot01"
 ```
 
 ---
@@ -199,7 +220,7 @@ Fix by running `npm pkg set type=module`.
 2. `invalid network object name or chainId`:
 Use `chainId: 428962654539583` as a number, not `428962654539583n`.
 3. `invalid private key`:
-Your env var is missing/invalid. Re-export `OWNER_PRIVATE_KEY` and `OPERATOR_PRIVATE_KEY`.
+Your env var is missing/invalid. Re-export `OWNER_PRIVATE_KEY` and the derived `OPERATOR_PRIVATE_KEY`.
 4. Gacha reveal commit mismatch:
 Resolve commit IDs from confirmed tx events/indexer output (do not trust preflight `staticCall` alone).
 5. Marketplace listing ID mismatch:
@@ -210,6 +231,8 @@ This usually means a failed precondition. Before sending txs, check owner/operat
 Name validation uses **bytes**, not characters. Keep names ASCII and <= 15 bytes.
 8. `fee payer address ... does not exist` during `eth_estimateGas`:
 Your Owner address has never been funded on Yominet. Bridge ETH to Owner first, then retry.
+9. Owner/operator mismatch:
+Do not point `OPERATOR_PRIVATE_KEY` at the owner key. Derive or supply a distinct operator wallet.
 
 ---
 
@@ -231,6 +254,14 @@ Once registered with a Kami, a bot's core loop looks like this:
 ## Choosing Your First Kami
 
 After registering, you need a Kami to play. The primary way to acquire one is **KamiSwap** (`system.kamimarket.buy`) — the in-game marketplace where players list Kamis for ETH. The **Owner wallet** pays for the purchase, and the Kami is assigned to your shared account entity (accessible by both Owner and Operator).
+
+For bots, the recommended first-Kami flow is:
+
+1. Pull active listings from `GetKamiMarketListings`
+2. Filter/select by budget, traits, or strategy
+3. Buy the chosen listing with `system.kamimarket.buy`
+
+See [Kamiden Indexer](player-api/indexer.md#getkamimarketlistings) for the listing query and [KamiSwap Marketplace](player-api/marketplace.md#2-buy-a-listing) for the on-chain buy call.
 
 When choosing a Kami, look at:
 

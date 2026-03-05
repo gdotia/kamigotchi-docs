@@ -43,6 +43,15 @@ unset DRY_RUN
 node bridge-live.mjs
 ```
 
+## Bootstrap inputs
+
+For the end-to-end agent bootstrap, the user supplies:
+
+- `PRIVATE_KEY` — the Base-funded owner wallet private key
+- `BRIDGE_AMOUNT_ETH` — how much ETH to move from Base to Yominet
+
+The script derives the destination `0x...` and `init1...` recipients from that key automatically.
+
 ## Optional env vars
 
 - `RECIPIENT_EVM` default: derived from `PRIVATE_KEY` (0x address)
@@ -71,5 +80,6 @@ node bridge-live.mjs
 
 ## Notes
 
-- This route deposits to Yominet token contract `0xE1Ff7038eAAAF027031688E1535a055B2Bac2546` (not native gas ETH).
+- This route lands on the Yominet ETH asset exposed through local contract `0xE1Ff7038eAAAF027031688E1535a055B2Bac2546`.
+- After bridge completion, the funds are usable for gas and native-ETH KamiSwap buys. Use the contract interface only when you need ERC-20 approvals such as marketplace offers or portal flows.
 - The old wrapped token (`l2/...`) is contract `0xFe4Bb04ED0906942a37DE4A1C2142219d9fC1150`.

@@ -66,7 +66,7 @@ const provider = new ethers.JsonRpcProvider(
 
 ## Bridging
 
-ETH on Yominet is **bridged via LayerZero** from Ethereum mainnet. Your **Owner wallet** needs ETH for gas. The Operator wallet is automatically assigned by Privy when you register an account in-game.
+ETH on Yominet is **bridged via LayerZero** from Ethereum, Base, or Arbitrum. Your **Owner wallet** needs ETH for gas and purchases. Browser players get an Operator wallet through Privy; agent bootstraps should derive a **distinct** operator wallet from the owner key and fund it before gameplay transactions.
 
 > **There is no faucet.** You must bridge real ETH to Yominet to get gas tokens.
 
@@ -91,6 +91,10 @@ The [Initia Bridge](https://app.initia.xyz/?openBridge=true) supports bridging E
 3. Enter the destination wallet address (your Owner wallet)
 4. Send ETH from **Arbitrum**, **Base**, or **Ethereum** mainnet
 5. Funds arrive as native ETH on Yominet
+
+### Option 3: Base Agent Bootstrap Route
+
+For agent flows that start with only ETH on Base, use the working bridge tooling in [Yominet Bridge Tooling](tools/yominet-bridge/README.md). The only user-facing bridge inputs are the owner private key and bridge amount; the runtime derives the Yominet recipients from that key.
 
 ### Recommended Funding Amounts
 
@@ -123,13 +127,13 @@ Yominet has several distinct currency types. Understanding the differences is cr
 | Currency | Type | Where It Lives | Used For |
 |----------|------|---------------|----------|
 | **Native ETH** | Gas token | Wallet balance | Gas fees, KamiSwap marketplace listing buys (`msg.value`) |
-| **WETH** | ERC-20 | Contract `0xE1Ff...2546` | Marketplace offers (approval-based), depositing into game as in-game ETH (item 103) via portal |
+| **WETH** | ERC-20 | Contract `0xE1Ff...2546` | ERC-20 approval flows such as marketplace offers and portal deposits |
 | **In-game ETH** | Inventory item | In-game (item 103) | In-game ETH-denominated actions |
 | **$MUSU** | Inventory item | In-game (item 1) | Merchant purchases, trade fees, NPC gifts, quest costs |
 | **$ONYX** | ERC-20 | Contract `0x4BaD...7CF4` on Yominet | Bridged into game as Onyx Shards via portal. Also used directly for revive, rename (disabled), respec (disabled) |
 | **Onyx Shards** | Inventory item | In-game (item 100) | In-game form of $ONYX. **1 ONYX = 100 Onyx Shards.** Deposited via `system.erc20.portal` |
 
-> **Key distinction:** Native ETH is what you bridge in and use for gas. WETH is the ERC-20 wrapper used for smart contract interactions that require token approvals. In-game ETH (item 103) is a separate inventory item created by depositing WETH through the portal.
+> **Key distinction:** Bridge into Yominet ETH first and use that balance for gas plus native-ETH purchases such as `kamimarket.buy`. When a system needs ERC-20 approvals, interact with the local WETH contract. In-game ETH (item 103) is a separate inventory item created by depositing WETH through the portal.
 
 ---
 
@@ -141,7 +145,7 @@ Yominet has several distinct currency types. Understanding the differences is cr
 
 WETH is needed for marketplace offers (which use ERC-20 approvals).
 
-> **How to get WETH on Yominet:** WETH is the ERC-20 wrapped version of native ETH. To get WETH, call `deposit()` on the WETH contract and send native ETH with the transaction. The WETH contract on Yominet works identically to WETH on Ethereum mainnet.
+> **How to think about WETH on Yominet:** The local contract at `0xE1Ff...2546` is the ERC-20 interface for Yominet ETH. If you only need gas or native-ETH purchases, bridged ETH is enough. If you need approval-based flows, call `deposit()` to wrap ETH into the ERC-20 interface and `withdraw()` to unwrap it back.
 
 ### Wrapping and Unwrapping ETH
 

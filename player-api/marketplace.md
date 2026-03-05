@@ -35,7 +35,7 @@ There is also an **admin-only** registry system (`system.kamimarket.registry`) f
 
 | Contract | Address | Description |
 |----------|---------|-------------|
-| **WETH** | `0xE1Ff7038eAAAF027031688E1535a055B2Bac2546` | ERC-20 wrapped ETH (bridged via LayerZero) — the underlying asset is also used as native gas, but WETH is the ERC-20 form |
+| **WETH** | `0xE1Ff7038eAAAF027031688E1535a055B2Bac2546` | ERC-20 interface for Yominet ETH, used when a marketplace flow needs token approvals |
 | **KamiMarketVault** | *(resolve from World config — see below)* | Holds WETH approvals for offer settlement |
 
 > **Finding the KamiMarketVault address:** The vault address is stored in the `ValueComponent` (`component.value`), keyed by `keccak256("is.config", "KAMI_MARKET_VAULT")`. Read it using the component read pattern:
@@ -238,7 +238,7 @@ await approveTx.wait();
 console.log("WETH approved:", ethers.formatEther(maxOfferSpend), "WETH");
 ```
 
-> **Note:** WETH on Yominet (`0xE1Ff...2546`) is bridged ETH via LayerZero — it's the same token used for gas. Players typically acquire WETH by wrapping their native ETH or bridging from other chains. See [Chain Configuration](../chain-configuration.md) for the WETH contract address and bridging details. Prefer exact/limited approvals and top up as needed.
+> **Note:** On Yominet, bridge ETH first for gas and native-ETH listing buys. When you need approval-based flows such as offers, wrap that ETH through the local WETH contract at `0xE1Ff...2546`. See [Chain Configuration](../chain-configuration.md) for bridging and wrapping details. Prefer exact/limited approvals and top up as needed.
 
 ### 1. Make a Specific Offer
 

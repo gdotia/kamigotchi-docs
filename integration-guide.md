@@ -17,9 +17,11 @@ If you want the shortest first-run path for a new bot developer, start with [Age
 | **Runtime** | Node.js v18+ (v20+ recommended) |
 | **Library** | ethers.js v6 |
 | **Module Mode** | ESM (`"type": "module"` in `package.json`) |
-| **Environment** | `OWNER_PRIVATE_KEY` and `OPERATOR_PRIVATE_KEY` |
-| **Wallets** | Two EOAs: Owner (with $ETH on Yominet) and Operator (with small $ETH for gas). For bots, you generate both wallets yourself — Privy is only used by the web UI client. |
+| **Environment** | `OWNER_PRIVATE_KEY`, `OPERATOR_PRIVATE_KEY`, and `KAMI_ACCOUNT_NAME` |
+| **Wallets** | Two EOAs: Owner (with $ETH on Yominet) and a **distinct** Operator (with small $ETH for gas). The high-level bootstrap can derive the operator from the owner key; this guide assumes both keys are already available. |
 | **Network** | Yominet (Chain ID: `428962654539583`) |
+
+> **Bootstrap vs low-level integration:** The single-owner-key bootstrap uses `OWNER_PRIVATE_KEY`, `BRIDGE_AMOUNT_ETH`, and `KAMI_ACCOUNT_NAME` as user inputs, then derives and funds a distinct operator wallet. The code in this guide starts *after* that derivation step and expects both keys to be exported.
 
 ---
 
@@ -30,7 +32,8 @@ If you want the shortest first-run path for a new bot developer, start with [Age
 Two options:
 
 1. **In-game bridge** — Open the Kamigotchi client, go to Settings > Bridge (uses the Initia bridge).
-2. **Initia Bridge** — Use the [Initia Bridge](https://app.initia.xyz/?openBridge=true) to bridge ETH from Ethereum mainnet to Yominet.
+2. **Initia Bridge** — Use the [Initia Bridge](https://app.initia.xyz/?openBridge=true) to bridge ETH from Arbitrum, Base, or Ethereum mainnet to Yominet.
+3. **Base agent bootstrap route** — Use [Yominet Bridge Tooling](tools/yominet-bridge/README.md) if your agent starts with a single owner key funded on Base.
 
 **Cost summary:**
 
@@ -44,7 +47,7 @@ Two options:
 
 **Recommended starting budget:** 0.01 ETH bridged to Yominet.
 
-> **Note:** For bots and programmatic integrations, you manage both wallets yourself — **Privy is only used by the web UI client**. Fund the Owner wallet for registration and privileged operations, and the Operator wallet with a small amount for gameplay gas.
+> **Note:** For bots and programmatic integrations, you manage both wallets yourself — **Privy is only used by the web UI client**. If you are using the single-owner-key bootstrap, bridge ETH to the Owner first, then fund the derived Operator from that balance before gameplay transactions.
 
 ---
 
@@ -54,15 +57,16 @@ Two options:
 mkdir kamigotchi-agent
 cd kamigotchi-agent
 npm init -y
-npm install ethers
+npm install ethers nice-grpc-web @bufbuild/protobuf tsx
 npm pkg set type=module
 
 # Linux/macOS
 export OWNER_PRIVATE_KEY=0xYOUR_OWNER_PRIVATE_KEY
 export OPERATOR_PRIVATE_KEY=0xYOUR_OPERATOR_PRIVATE_KEY
+export KAMI_ACCOUNT_NAME=MyBot01
 ```
 
-> **Windows PowerShell:** use `$env:OWNER_PRIVATE_KEY="0x..."` and `$env:OPERATOR_PRIVATE_KEY="0x..."`.
+> **Windows PowerShell:** use `$env:OWNER_PRIVATE_KEY="0x..."`, `$env:OPERATOR_PRIVATE_KEY="0x..."`, and `$env:KAMI_ACCOUNT_NAME="MyBot01"`.
 
 ---
 
@@ -89,7 +93,7 @@ console.log(`Connected to Yominet (block: ${blockNumber})`);
 
 ## Step 2: Set Up Wallets
 
-Kamigotchi uses a **dual-wallet model**. The official game client handles this via [Privy](https://privy.io) — players connect their external wallet (Owner), and Privy auto-creates an embedded wallet (Operator). **For bots, Privy is not involved** — you generate both wallets yourself and pass the Operator address as a parameter when calling `AccountRegisterSystem`:
+Kamigotchi uses a **dual-wallet model**. The official game client handles this via [Privy](https://privy.io) — players connect their external wallet (Owner), and Privy auto-creates an embedded wallet (Operator). **For bots, Privy is not involved**. The higher-level bootstrap may derive the operator from the owner key, but by the time you reach the contract layer you must have both keys available, and the operator must be a **different** address from the owner:
 
 ```javascript
 function mustEnv(name) {
@@ -106,6 +110,10 @@ const ownerSigner = new ethers.Wallet(mustEnv("OWNER_PRIVATE_KEY"), provider);
 // Operator wallet — handles routine gameplay transactions
 // (In the official client, this is Privy's embedded wallet)
 const operatorSigner = new ethers.Wallet(mustEnv("OPERATOR_PRIVATE_KEY"), provider);
+
+if (ownerSigner.address === operatorSigner.address) {
+  throw new Error("Operator must be a distinct address. Do not reuse the owner key.");
+}
 
 console.log("Owner:", ownerSigner.address);
 console.log("Operator:", operatorSigner.address);
@@ -162,7 +170,7 @@ async function getSystem(systemId, abi, signer) {
 
 ## Step 4: Register an Account
 
-Registration is called from the **Owner wallet** and takes the **Operator address** as a parameter. The Operator is not "assigned by Privy" for bots — you simply pass the address of the Operator wallet you generated.
+Registration is called from the **Owner wallet** and takes the **Operator address** as a parameter. The Operator is not "assigned by Privy" for bots — you pass the address of your distinct operator wallet.
 
 ```javascript
 const REGISTER_ABI = [
@@ -189,6 +197,10 @@ if (nameBytes < 1 || nameBytes > 15) {
 
 const ownerAccountId = BigInt(ownerSigner.address);
 const operatorAccountId = BigInt(operatorSigner.address);
+
+if (ownerSigner.address === operatorSigner.address) {
+  throw new Error("Operator must be distinct from owner. Do not reuse the owner address.");
+}
 
 async function hasAccount(accountId) {
   try {
@@ -286,6 +298,52 @@ The **KamiSwap** marketplace lets players buy Kamis listed by other players. Thi
 See [KamiSwap — Marketplace](player-api/marketplace.md) for full details on browsing listings, buying, and making offers.
 
 > **Finding your Kami after purchase:** Use `IDOwnsKamiComponent` to list your Kamis, or scan `getKamiByIndex()` (as shown in the [Complete Example](#complete-example-script) below). See [Entity Discovery — Enumerating Your Kamis](player-api/entity-discovery.md#enumerating-your-kamis) for the component-based approach.
+
+#### Pull Active Listings from Kamiden
+
+Programmatic bots should query the Kamiden indexer before buying. Follow the proto setup in [Kamiden Indexer](player-api/indexer.md#connecting-from-nodejs), then fetch current listings:
+
+```typescript
+import { createChannel, createClient } from "nice-grpc-web";
+import { KamidenServiceDefinition } from "./proto.ts";
+
+const channel = createChannel("https://api.prod.kamigotchi.io");
+const kamiden = createClient(KamidenServiceDefinition, channel);
+
+const { Listings = [] } = await kamiden.getKamiMarketListings({ Size: 25 });
+const activeListings = Listings
+  .filter((listing) => !listing.BuyerAccountID)
+  .sort((a, b) => {
+    const left = BigInt(a.Price);
+    const right = BigInt(b.Price);
+    return left < right ? -1 : left > right ? 1 : 0;
+  });
+
+for (const listing of activeListings) {
+  console.log(
+    `Kami #${listing.KamiIndex} | ${ethers.formatEther(BigInt(listing.Price))} ETH | order ${listing.OrderID}`
+  );
+}
+```
+
+Once you choose a listing, buy it from the Owner wallet:
+
+```javascript
+const selected = activeListings[0];
+if (!selected) throw new Error("No active KamiSwap listings available.");
+
+const listingId = BigInt(selected.OrderID);
+const listingPrice = BigInt(selected.Price);
+
+const buySystem = await getSystem(
+  "system.kamimarket.buy",
+  ["function executeTyped(uint256[] memory listingIDs) payable returns (bytes)"],
+  ownerSigner
+);
+
+await (await buySystem.executeTyped([listingId], { value: listingPrice })).wait();
+console.log(`Purchased Kami #${selected.KamiIndex}`);
+```
 
 ### Option B: Gacha Minting
 
@@ -501,18 +559,24 @@ Now that you've registered, set up wallets, and can call systems — you'll need
 
 ## Complete Example Script
 
-A single copy-paste-ready script that takes a fresh wallet through the entire first-run flow: connect, register, buy a Kami, move to a harvest room, start harvesting, wait, and collect.
+A single end-to-end script that takes a fresh wallet through the full first-run flow: connect, register, pull KamiSwap listings, buy a Kami, move to a harvest room, start harvesting, wait, and collect.
 
-```javascript
-// complete-example.js — Full first-run bot script (ethers v6, ESM)
+```typescript
+// complete-example.ts — Full first-run bot script (ethers v6 + Kamiden, ESM)
 //
 // Prerequisites:
-//   npm init -y && npm install ethers && npm pkg set type=module
+//   npm init -y
+//   npm install ethers nice-grpc-web @bufbuild/protobuf tsx
+//   npm pkg set type=module
+//   Copy ./proto.ts from the official client as shown in player-api/indexer.md
 //   export OWNER_PRIVATE_KEY=0x...
 //   export OPERATOR_PRIVATE_KEY=0x...
-//   node complete-example.js
+//   export KAMI_ACCOUNT_NAME=MyBot01
+//   npx tsx complete-example.ts
 
 import { ethers } from "ethers";
+import { createChannel, createClient } from "nice-grpc-web";
+import { KamidenServiceDefinition } from "./proto.ts";
 
 // ============================================================
 // Configuration
@@ -521,10 +585,13 @@ import { ethers } from "ethers";
 const RPC_URL = "https://jsonrpc-yominet-1.anvil.asia-southeast.initia.xyz";
 const WORLD_ADDRESS = "0x2729174c265dbBd8416C6449E0E813E88f43D0E7";
 const CHAIN = { chainId: 428962654539583, name: "Yominet" };
+const KAMIDEN_URL = "https://api.prod.kamigotchi.io";
 
 // How long to harvest before collecting (in seconds).
 // 120 s is enough to accumulate a small reward for demonstration.
 const HARVEST_WAIT_SECONDS = 120;
+const OPERATOR_GAS_FLOOR = ethers.parseEther("0.0005");
+const OWNER_RESERVE = ethers.parseEther("0.0005");
 
 // ============================================================
 // Environment helpers
@@ -547,6 +614,10 @@ function mustEnv(name) {
 const provider = new ethers.JsonRpcProvider(RPC_URL, CHAIN);
 const ownerSigner = new ethers.Wallet(mustEnv("OWNER_PRIVATE_KEY"), provider);
 const operatorSigner = new ethers.Wallet(mustEnv("OPERATOR_PRIVATE_KEY"), provider);
+const kamiden = createClient(
+  KamidenServiceDefinition,
+  createChannel(KAMIDEN_URL)
+);
 
 // ============================================================
 // System resolver (inlined — no external helper import)
@@ -591,15 +662,6 @@ async function getSystem(systemId, abi, signer) {
 // Entity ID helpers
 // ============================================================
 
-/** Kami entity ID: keccak256(abi.encodePacked("kami.id", uint32(kamiTokenIndex))) */
-function getKamiEntityId(kamiTokenIndex) {
-  return BigInt(
-    ethers.keccak256(
-      ethers.solidityPacked(["string", "uint32"], ["kami.id", kamiTokenIndex])
-    )
-  );
-}
-
 /** Harvest entity ID: keccak256(abi.encodePacked("harvest", uint256(kamiEntityId))) */
 function getHarvestEntityId(kamiEntityId) {
   return BigInt(
@@ -622,6 +684,10 @@ async function main() {
   console.log("Owner:   ", ownerSigner.address);
   console.log("Operator:", operatorSigner.address);
 
+  if (ownerSigner.address === operatorSigner.address) {
+    throw new Error("Operator must be a distinct address. Do not reuse the owner key.");
+  }
+
   const [ownerBal, operatorBal] = await Promise.all([
     provider.getBalance(ownerSigner.address),
     provider.getBalance(operatorSigner.address),
@@ -633,6 +699,8 @@ async function main() {
   if (operatorBal === 0n) {
     console.warn("⚠️  Operator wallet has no ETH. It will need gas to send gameplay transactions.");
     console.warn("   Send a small amount of ETH to:", operatorSigner.address);
+  } else if (operatorBal < OPERATOR_GAS_FLOOR) {
+    console.warn("⚠️  Operator gas is low:", ethers.formatEther(operatorBal), "ETH");
   }
 
   // ----------------------------------------------------------
@@ -710,20 +778,55 @@ async function main() {
   // ----------------------------------------------------------
   // 3. Acquire first Kami via KamiSwap Marketplace
   // ----------------------------------------------------------
-  // To get your first Kami, purchase one from the KamiSwap marketplace.
-  // See the KamiSwap documentation for browsing listings and buying:
-  // player-api/marketplace.md
-  //
-  // Example: buying a listing by ID (you'll need to discover listing IDs
-  // from the marketplace — see the marketplace docs for querying listings)
-  //
-  // const buySystem = await getSystem(
-  //   "system.kamimarket.buy",
-  //   ["function executeTyped(uint256[] memory listingIDs) payable returns (bytes)"],
-  //   ownerSigner
-  // );
-  // const buyTx = await buySystem.executeTyped([listingId], { value: listingPrice });
-  // await buyTx.wait();
+  const ownerBalanceAfterRegister = await provider.getBalance(ownerSigner.address);
+  const maxKamiSpend =
+    ownerBalanceAfterRegister > OWNER_RESERVE
+      ? ownerBalanceAfterRegister - OWNER_RESERVE
+      : 0n;
+  const listingsResponse = await kamiden.getKamiMarketListings({ Size: 25 });
+  const activeListings = (listingsResponse.Listings ?? [])
+    .filter((listing) => !listing.BuyerAccountID)
+    .sort((a, b) => {
+      const left = BigInt(a.Price);
+      const right = BigInt(b.Price);
+      return left < right ? -1 : left > right ? 1 : 0;
+    });
+
+  if (activeListings.length === 0) {
+    throw new Error("No active KamiSwap listings available.");
+  }
+
+  console.log("\nActive KamiSwap listings:");
+  for (const listing of activeListings.slice(0, 10)) {
+    console.log(
+      `  Kami #${listing.KamiIndex} | ${ethers.formatEther(BigInt(listing.Price))} ETH | order ${listing.OrderID}`
+    );
+  }
+
+  const selectedListing = activeListings.find(
+    (listing) => BigInt(listing.Price) <= maxKamiSpend
+  );
+  if (!selectedListing) {
+    throw new Error(
+      `No listing is affordable after reserving ${ethers.formatEther(OWNER_RESERVE)} ETH for owner gas.`
+    );
+  }
+
+  const listingId = BigInt(selectedListing.OrderID);
+  const listingPrice = BigInt(selectedListing.Price);
+  console.log(
+    `\nBuying Kami #${selectedListing.KamiIndex} for ${ethers.formatEther(listingPrice)} ETH (order ${selectedListing.OrderID})`
+  );
+
+  const buySystem = await getSystem(
+    "system.kamimarket.buy",
+    ["function executeTyped(uint256[] memory listingIDs) payable returns (bytes)"],
+    ownerSigner
+  );
+
+  const buyTx = await buySystem.executeTyped([listingId], { value: listingPrice });
+  await buyTx.wait();
+  console.log("Kami purchased.");
 
   // ----------------------------------------------------------
   // 4. Discover the Kami's entity ID via component lookup

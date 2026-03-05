@@ -825,7 +825,7 @@ Configuration values for the Kami marketplace.
 
 | Contract | Address | Description |
 |----------|---------|-------------|
-| **WETH** | `0xE1Ff7038eAAAF027031688E1535a055B2Bac2546` | ERC-20 wrapped ETH (bridged via LayerZero) — not the native gas token itself, but wraps the same underlying asset |
+| **WETH** | `0xE1Ff7038eAAAF027031688E1535a055B2Bac2546` | ERC-20 interface for Yominet ETH, used for approval-based flows such as offers and portal deposits |
 | **KamiMarketVault** | *(from `KAMI_MARKET_VAULT` config)* | Holds WETH approvals for offer settlement |
 
 ### Configuration

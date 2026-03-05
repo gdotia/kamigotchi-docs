@@ -15,7 +15,7 @@ If you are starting from zero, run through [Agent Bootstrap](../agent-bootstrap.
 - **Node.js** v18+ and **ethers.js v6**
 - **ESM mode** enabled (`"type": "module"` in `package.json`)
 - **Environment variables** set for `OWNER_PRIVATE_KEY` and `OPERATOR_PRIVATE_KEY`
-- Two EOAs: Owner (with $ETH) and Operator (with small $ETH for gas). For bots, generate both yourself — Privy is only for the web UI (see [Chain Configuration](../chain-configuration.md))
+- Two EOAs: Owner (with $ETH) and a **distinct** Operator (with small $ETH for gas). The higher-level bootstrap can derive the operator from the owner key; this page assumes both keys are already available. Privy is only for the web UI (see [Chain Configuration](../chain-configuration.md))
 - The World contract address
 
 ```bash
@@ -54,6 +54,10 @@ const operatorSigner = new ethers.Wallet(mustEnv("OPERATOR_PRIVATE_KEY"), provid
 
 // Owner wallet for privileged actions (register, NFTs, ONYX)
 const ownerSigner = new ethers.Wallet(mustEnv("OWNER_PRIVATE_KEY"), provider);
+
+if (ownerSigner.address === operatorSigner.address) {
+  throw new Error("Operator must be a distinct address. Do not reuse the owner key.");
+}
 
 // --- World Contract ---
 const WORLD_ABI = [
