@@ -260,7 +260,7 @@ Nodes are the harvestable locations within rooms. Each node shares an index with
 
 > **Total nodes:** 64. Shown above are the first 30; for the full list see `packages/contracts/deployment/world/data/rooms/nodes.csv`. Node affinity affects harvest efficacy — match your Kami's body/hand affinities to the node affinity for bonuses.
 >
-> **Yield Index:** Most nodes use YieldIndex=1 (yields MUSU, item index 1). The following nodes use YieldIndex=2, which yields **VIPP** (VIP Paper, item index 2 — a consumable that can be sacrificed for VIP status): 18 (Cave Crossroads), 60 (Scrap Trees), 61 (Musty Forest Path), 62 (Centipedes), 63 (Deeper Forest Path), 65 (Forest Hut), 73 (Broken Tube), 75 (Flood Mural), 79 (Abandoned Campsite), 83 (Canyon Bridge), 88 (Treasure Hoard).
+> **Yield Index:** Most nodes use YieldIndex=1 (yields MUSU, item index 1). The following nodes use YieldIndex=2, which yields **VIPP** (VIP Points token, item index 2 — can be burned at Forest Hut room 65): 18 (Cave Crossroads), 60 (Scrap Trees), 61 (Musty Forest Path), 62 (Centipedes), 63 (Deeper Forest Path), 65 (Forest Hut), 73 (Broken Tube), 75 (Flood Mural), 79 (Abandoned Campsite), 83 (Canyon Bridge), 88 (Treasure Hoard).
 
 ---
 
