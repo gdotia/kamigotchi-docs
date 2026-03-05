@@ -142,82 +142,96 @@ Items are identified by a `uint32` index. The on-chain entity ID for an item is 
 
 Rooms are identified by a `uint32` index. On-chain entity ID: `keccak256("room", roomIndex)`.
 
-| Index | Name | Exits | Zone |
-|-------|------|-------|------|
-| 1 | Misty Riverside | 20 | Surface |
-| 2 | Tunnel of Trees | 13 | Surface |
-| 3 | Torii Gate | — | Surface |
-| 4 | Vending Machine | — | Surface |
-| 5 | Restricted Area | — | Surface |
-| 6 | Labs Entrance | 28 | Surface |
-| 9 | Forest: Old Growth | — | Surface |
-| 10 | Forest: Insect Node | — | Surface |
-| 11 | Temple by the Waterfall | 24, 15 | Surface |
-| 12 | Scrap Confluence | — | Surface |
-| 13 | Convenience Store | 2 | Interior |
-| 15 | Temple Cave | 11 | Caves |
-| 16 | Techno Temple | — | Caves |
-| 18 | Cave Crossroads | — | Caves |
-| 19 | Temple of the Wheel | 59 | Caves |
-| 25 | Lost Skeleton | — | Surface |
-| 26 | Trash-Strewn Graves | — | Surface |
-| 29 | Misty Forest Path | — | Surface |
-| 30 | Scrapyard Entrance | — | Surface |
-| 31 | Scrapyard Exit | — | Surface |
-| 32 | Road To Labs | — | Surface |
-| 33 | Forest Entrance | — | Surface |
-| 34 | Deeper Into Scrap | — | Surface |
-| 35 | Elder Path | — | Surface |
-| 36 | Parting Path | — | Surface |
-| 37 | Hollow Path | — | Surface |
-| 47 | Scrap Paths | — | Surface |
-| 48 | Murky Forest Path | — | Surface |
-| 49 | Clearing | — | Surface |
-| 50 | Ancient Forest Entrance | — | Surface |
-| 51 | Scrap-Littered Undergrowth | — | Surface |
-| 52 | Airplane Crash | 54 | Surface |
-| 53 | Blooming Tree | — | Surface |
-| 54 | Plane Interior | 52 | Interior |
-| 55 | Shady Path | — | Surface |
-| 56 | Butterfly Forest | — | Surface |
-| 57 | River Crossing | — | Surface |
-| 58 | Mouth of Scrap | — | Surface |
-| 59 | Black Pool | 19 | Surface |
-| 60 | Scrap Trees | — | Surface |
-| 61 | Musty Forest Path | — | Surface |
-| 62 | Centipedes | — | Surface |
-| 63 | Deeper Forest Path | — | Surface |
-| 64 | Burning Room | 65 | Interior |
-| 65 | Forest Hut | 64 | Surface |
-| 66 | Marketplace | — | Surface |
-| 67 | Boulder Tunnel | — | Caves |
-| 68 | Slippery Pit | — | Caves |
-| 69 | Lotus Pool | — | Caves |
-| 70 | Still Stream | — | Caves |
-| 71 | Shabby Deck | — | Caves |
-| 72 | Hatch to Nowhere | 88 | Caves |
-| 73 | Broken Tube | — | Caves |
-| 74 | Engraved Door | — | Caves |
-| 75 | Flood Mural | — | Caves |
-| 76 | Fungus Garden | — | Caves |
-| 77 | Thriving Mushrooms | — | Caves |
-| 78 | Toadstool Platforms | — | Caves |
-| 79 | Abandoned Campsite | — | Caves |
-| 80 | Radiant Crystal | — | Caves |
-| 81 | Flower Mural | — | Caves |
-| 82 | Geometric Cliffs | — | Caves |
-| 83 | Canyon Bridge | — | Caves |
-| 84 | Reinforced Tunnel | — | Caves |
-| 85 | Giant's Palm | — | Caves |
-| 86 | Guardian Skull | — | Caves |
-| 87 | Sacrarium | — | Caves |
-| 88 | Treasure Hoard | 72 | Other World |
-| 89 | Trophies of the Hunt | — | Other World |
-| 90 | Scenic View | — | Other World |
+| Index | Name | X | Y | Z | Special Exits |
+|-------|------|---|---|---|---------------|
+| 1 | Misty Riverside | 3 | 1 | 1 | 20 |
+| 2 | Tunnel of Trees | 3 | 3 | 1 | 13 |
+| 3 | Torii Gate | 3 | 4 | 1 | — |
+| 4 | Vending Machine | 3 | 6 | 1 | — |
+| 5 | Restricted Area | 3 | 9 | 1 | — |
+| 6 | Labs Entrance | 4 | 10 | 1 | 28 |
+| 9 | Forest: Old Growth | 5 | 8 | 1 | — |
+| 10 | Forest: Insect Node | 5 | 5 | 1 | — |
+| 11 | Temple by the Waterfall | 6 | 11 | 1 | 24, 15 |
+| 12 | Scrap Confluence | 1 | 6 | 1 | — |
+| 13 | Convenience Store | 4 | 3 | 2 | 2 |
+| 15 | Temple Cave | 5 | 7 | 3 | 11 |
+| 16 | Techno Temple | 6 | 7 | 3 | — |
+| 18 | Cave Crossroads | 5 | 6 | 3 | — |
+| 19 | Temple of the Wheel | 2 | 4 | 3 | 59 |
+| 25 | Lost Skeleton | 6 | 9 | 1 | — |
+| 26 | Trash-Strewn Graves | 2 | 8 | 1 | — |
+| 29 | Misty Forest Path | 3 | 2 | 1 | — |
+| 30 | Scrapyard Entrance | 3 | 5 | 1 | — |
+| 31 | Scrapyard Exit | 3 | 8 | 1 | — |
+| 32 | Road To Labs | 3 | 10 | 1 | — |
+| 33 | Forest Entrance | 4 | 8 | 1 | — |
+| 34 | Deeper Into Scrap | 2 | 6 | 1 | — |
+| 35 | Elder Path | 5 | 6 | 1 | — |
+| 36 | Parting Path | 5 | 9 | 1 | — |
+| 37 | Hollow Path | 6 | 10 | 1 | — |
+| 47 | Scrap Paths | 3 | 7 | 1 | — |
+| 48 | Murky Forest Path | 5 | 7 | 1 | — |
+| 49 | Clearing | 7 | 9 | 1 | — |
+| 50 | Ancient Forest Entrance | 6 | 5 | 1 | — |
+| 51 | Scrap-Littered Undergrowth | 7 | 5 | 1 | — |
+| 52 | Airplane Crash | 8 | 5 | 1 | 54 |
+| 53 | Blooming Tree | 7 | 4 | 1 | — |
+| 54 | Plane Interior | 8 | 5 | 2 | 52 |
+| 55 | Shady Path | 4 | 3 | 1 | — |
+| 56 | Butterfly Forest | 5 | 3 | 1 | — |
+| 57 | River Crossing | 6 | 3 | 1 | — |
+| 58 | Mouth of Scrap | 1 | 5 | 1 | — |
+| 59 | Black Pool | 1 | 4 | 1 | 19 |
+| 60 | Scrap Trees | 5 | 1 | 1 | — |
+| 61 | Musty Forest Path | 7 | 1 | 1 | — |
+| 62 | Centipedes | 8 | 1 | 1 | — |
+| 63 | Deeper Forest Path | 6 | 2 | 1 | — |
+| 64 | Burning Room | 5 | 5 | 2 | 65 |
+| 65 | Forest Hut | 6 | 1 | 1 | 64 |
+| 66 | Marketplace | 2 | 2 | 1 | — |
+| 67 | Boulder Tunnel | 4 | 6 | 3 | — |
+| 68 | Slippery Pit | 3 | 6 | 3 | — |
+| 69 | Lotus Pool | 3 | 7 | 3 | — |
+| 70 | Still Stream | 2 | 7 | 3 | — |
+| 71 | Shabby Deck | 1 | 7 | 3 | — |
+| 72 | Hatch to Nowhere | 1 | 6 | 3 | 88 |
+| 73 | Broken Tube | 1 | 5 | 3 | — |
+| 74 | Engraved Door | 2 | 5 | 3 | — |
+| 75 | Flood Mural | 3 | 5 | 3 | — |
+| 76 | Fungus Garden | 5 | 5 | 3 | — |
+| 77 | Thriving Mushrooms | 5 | 4 | 3 | — |
+| 78 | Toadstool Platforms | 5 | 3 | 3 | — |
+| 79 | Abandoned Campsite | 5 | 2 | 3 | — |
+| 80 | Radiant Crystal | 6 | 2 | 3 | — |
+| 81 | Flower Mural | 7 | 2 | 3 | — |
+| 82 | Geometric Cliffs | 7 | 3 | 3 | — |
+| 83 | Canyon Bridge | 7 | 4 | 3 | — |
+| 84 | Reinforced Tunnel | 6 | 4 | 3 | — |
+| 85 | Giant's Palm | 7 | 5 | 3 | — |
+| 86 | Guardian Skull | 8 | 5 | 3 | — |
+| 87 | Sacrarium | 8 | 6 | 3 | — |
+| 88 | Treasure Hoard | 3 | 1 | 4 | 72 |
+| 89 | Trophies of the Hunt | 2 | 1 | 4 | — |
+| 90 | Scenic View | 1 | 1 | 4 | — |
 
-> **Total rooms:** 68. Room indices are **not sequential** — there are gaps (e.g., indices 7, 8, 14, 17, 20–24, 27–28 do not exist). Do not assume rooms form a contiguous range; always check for existence before querying. Room connectivity (exits) defines the world graph. Some exits are gated by quest completion or items.
->
-> **Room coordinates** are stored on-chain in the Location component. To determine room adjacency for movement, query the coordinates and check: adjacent rooms differ by exactly 1 on a single axis (x or y), same z-level. Some rooms also have special exits listed in the table above.
+> **Total rooms:** 68. Room indices are **not sequential** — gaps exist (e.g., 7, 8, 14, 17, 20–24, 27–28).
+
+### Movement Rules
+
+Rooms are connected by **coordinate adjacency**: two rooms are adjacent if they differ by exactly 1 on a single axis (X or Y) and share the same Z-level. Movement is only possible between adjacent rooms or via **special exits** (listed in the table above), which can connect rooms across Z-levels or non-adjacent coordinates.
+
+**Pathfinding for agents:** Build a graph where edges connect rooms that are coordinate-adjacent (same Z, ΔX or ΔY = 1, other axis unchanged) plus all special exit pairs. Some exits are gated by quest completion or items (e.g., caves require completing MSQ035).
+
+```javascript
+// Check if two rooms are adjacent (same Z, differ by 1 on exactly one axis)
+function isAdjacent(roomA, roomB) {
+  if (roomA.z !== roomB.z) return false;
+  const dx = Math.abs(roomA.x - roomB.x);
+  const dy = Math.abs(roomA.y - roomB.y);
+  return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+}
+```
 
 ---
 
