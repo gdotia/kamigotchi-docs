@@ -1,6 +1,8 @@
 # Portal (ERC721 / ERC20)
 
-The portal system bridges assets between on-chain wallets and the in-game world. Stake NFTs into the game, withdraw them back, and manage ERC-20 token deposits/withdrawals.
+The portal system bridges assets between on-chain wallets and the in-game world. Stake NFTs into the game and manage ERC-20 token deposits/withdrawals.
+
+> **📌 Feb 2026 Update:** The Kami NFT Portal has been simplified to **import-only**. Unstaking (exporting Kamis back to your wallet) has been removed from the UI. The portal now focuses on staking Kamis into the game world.
 
 ---
 
@@ -62,46 +64,9 @@ console.log("Kami staked into game world!");
 
 ---
 
-### ERC721.kami.unstake()
+### ~~ERC721.kami.unstake()~~ — Removed
 
-Withdraw a Kami NFT from the game world back to your wallet.
-
-| Property | Value |
-|----------|-------|
-| **System ID** | `system.kami721.unstake` |
-| **Wallet** | 🔐 Owner |
-| **Gas** | Default |
-
-#### Parameters
-
-| Name | Type | Description |
-|------|------|-------------|
-| `tokenIndex` | `uint32` | Index of the Kami in-game |
-
-#### Description
-
-Withdraws a Kami from the game world back to the owner's wallet as an ERC-721 NFT. The in-game Kami entity is removed, and the NFT is transferred back.
-
-#### Code Example
-
-```javascript
-import { getSystem, ownerSigner, operatorSigner } from "./kamigotchi.js";
-
-// Must use OWNER wallet
-const ABI = ["function executeTyped(uint32 tokenIndex) returns (bytes)"];
-const system = await getSystem("system.kami721.unstake", ABI, ownerSigner);
-
-const tx = await system.executeTyped(kamiIndex);
-await tx.wait();
-console.log("Kami withdrawn to wallet!");
-```
-
-#### Notes
-
-- **Prerequisite:** Your account must be in **Room 12 (Scrap Confluence)**. Call `account.move(12)` first.
-- The Kami must not be actively harvesting or in any locked state.
-- Stop all harvests and remove equipment before unstaking.
-- Soulbound Kamis cannot be unstaked. The soulbound period must expire first.
+> **⚠️ As of the Feb 2026 patch, the Kami Portal is import-only.** Unstaking (exporting Kamis back to your wallet as NFTs) has been removed from the client. The on-chain `system.kami721.unstake` contract still exists but is no longer exposed in the game UI. The portal now only supports importing (staking) Kamis into the game world.
 
 ---
 
