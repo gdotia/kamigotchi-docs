@@ -10,7 +10,7 @@ KamiSwap is Kamigotchi's native on-chain Kami marketplace. Players can list Kami
 
 ## Overview
 
-KamiSwap has **6 player-facing systems**:
+KamiSwap has **6 player-facing systems** plus the **Newbie Vendor**:
 
 | System ID | Contract | Wallet | Description |
 |-----------|----------|--------|-------------|
@@ -19,6 +19,7 @@ KamiSwap has **6 player-facing systems**:
 | `system.kamimarket.offer` | KamiMarketOfferSystem | Operator | Make a specific or collection offer (WETH) |
 | `system.kamimarket.acceptoffer` | KamiMarketAcceptOfferSystem | Operator | Accept an offer |
 | `system.kamimarket.cancel` | KamiMarketCancelSystem | Operator | Cancel a listing or offer |
+| `system.newbievendor.buy` | NewbieVendorBuySystem | Owner (payable) | Buy a Kami from the Newbie Vendor (one-time, new accounts) |
 
 There is also an **admin-only** registry system (`system.kamimarket.registry`) for configuring fees, vault, and enable/disable — not covered here.
 
@@ -239,6 +240,8 @@ console.log("WETH approved:", ethers.formatEther(maxOfferSpend), "WETH");
 ```
 
 > **Note:** On Yominet, bridge ETH first for gas and native-ETH listing buys. When you need approval-based flows such as offers, wrap that ETH through the local WETH contract at `0xE1Ff...2546`. See [Chain Configuration](../chain-configuration.md) for bridging and wrapping details. Prefer exact/limited approvals and top up as needed.
+
+> **Wallet note:** Offers are *created* by the **Operator** wallet, but when an offer is accepted, WETH is pulled from the **Owner** wallet via the vault. Approve WETH from your Owner wallet (as shown above), then create offers from your Operator wallet.
 
 ### 1. Make a Specific Offer
 
@@ -521,6 +524,74 @@ function executeTyped(uint32 merchantIndex, uint32[] itemIndices, uint32[] amts)
 - **Currency** — transactions use in-game item currency (e.g., $MUSU), not ETH or WETH
 
 These systems are distinct from the KamiSwap P2P marketplace documented above.
+
+---
+
+## Newbie Vendor
+
+The Newbie Vendor is an alternative Kami acquisition path for new players. It offers discounted Kamis at TWAP-derived prices, available one time per account within 24 hours of registration.
+
+**System:** `system.newbievendor.buy`
+**Wallet:** Owner (payable)
+
+| Property | Value |
+|----------|-------|
+| **System ID** | `system.newbievendor.buy` |
+| **Wallet** | Owner (payable) |
+| **One-time** | Yes — each account can buy exactly once |
+| **Time limit** | Must purchase within 24 hours of account registration |
+| **Pricing** | `max(TWAP price, minimum price)` — minimum defaults to 0.005 ETH |
+| **Soulbound** | Purchased Kami is soulbound for 3 days (cannot list, unstake, or accept offers) |
+
+### Parameters
+
+```solidity
+function executeTyped(uint32 kamiIndex) payable returns (bytes)
+// kamiIndex — index of the Kami on display in the vendor pool
+// msg.value — must be >= calcPrice()
+
+function calcPrice() view returns (uint256)
+// Returns current vendor price: max(TWAP oracle price, minimum price)
+```
+
+### How It Works
+
+1. Admin populates the vendor with a pool of Kami indices
+2. The vendor displays 3 Kamis at a time, rotating every `NEWBIE_VENDOR_CYCLE` seconds
+3. Player calls `calcPrice()` to check the current price
+4. Player calls `executeTyped(kamiIndex)` with sufficient ETH — excess is refunded
+5. The purchased Kami is soulbound for 3 days
+6. The `NEWBIE_VENDOR_PURCHASED` flag prevents repeat purchases
+
+### Code Example
+
+```javascript
+const VENDOR_ABI = [
+  "function executeTyped(uint32 kamiIndex) payable returns (bytes)",
+  "function calcPrice() view returns (uint256)",
+];
+const vendor = await getSystem("system.newbievendor.buy", VENDOR_ABI, ownerSigner);
+
+// Check current price
+const price = await vendor.calcPrice();
+console.log("Vendor price:", ethers.formatEther(price), "ETH");
+
+// Buy Kami index 7 from the vendor
+const tx = await vendor.executeTyped(7, { value: price });
+await tx.wait();
+console.log("Kami purchased from Newbie Vendor!");
+```
+
+### Common Errors
+
+| Error | Cause |
+|-------|-------|
+| `NewbieVendor: disabled` | Vendor is currently disabled by admin |
+| `NewbieVendor: already purchased` | Account already used the one-time purchase |
+| `NewbieVendor: account too old` | Account was registered more than 24 hours ago |
+| `NewbieVendor: insufficient ETH` | `msg.value` is less than `calcPrice()` |
+| `NewbieVendor: pool empty` | No Kamis available in the vendor pool |
+| `NewbieVendor: kami not on display` | Selected Kami is in the pool but not in the current display window |
 
 ---
 

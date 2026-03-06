@@ -4,7 +4,7 @@
 
 # System IDs & ABI References
 
-Kamigotchi has **66 documented player-facing systems** in the World contract. Each system is identified by a human-readable string ID, hashed with `keccak256` for on-chain lookup. The World contains additional internal and admin systems not covered here.
+Kamigotchi has **67 documented player-facing systems** in the World contract. Each system is identified by a human-readable string ID, hashed with `keccak256` for on-chain lookup. The World contains additional internal and admin systems not covered here.
 
 ---
 
@@ -136,7 +136,7 @@ Kamigotchi has **66 documented player-facing systems** in the World contract. Ea
 | `system.Kami721.Metadata` | Get Kami token URI metadata (view) | N/A | [Portal](../player-api/portal.md) |
 | `system.erc20.portal` | ERC20 deposit/withdraw | Owner | [Portal](../player-api/portal.md) |
 
-> **Note:** `system.Kami721.IsInWorld` and `system.Kami721.Metadata` use **PascalCase** — this differs from all other system IDs which use lowercase dot notation. These IDs must be passed exactly as shown (case-sensitive) when hashing with `keccak256`.
+> **IMPORTANT: Case-sensitive system IDs.** Most system IDs use lowercase dot notation (e.g., `system.account.register`). Two exceptions use **PascalCase**: `system.Kami721.IsInWorld` and `system.Kami721.Metadata`. Case is critical when hashing with `keccak256()` — a wrong case produces a different hash and the system will not resolve.
 
 ### NPC / Relationship Systems
 
@@ -161,6 +161,7 @@ Kamigotchi has **66 documented player-facing systems** in the World contract. Ea
 | `system.kamimarket.offer` | Make a specific or collection offer (WETH) | Operator | [Marketplace](../player-api/marketplace.md) |
 | `system.kamimarket.acceptoffer` | Accept an offer (specific or collection) | Operator | [Marketplace](../player-api/marketplace.md) |
 | `system.kamimarket.cancel` | Cancel a listing or offer | Operator | [Marketplace](../player-api/marketplace.md) |
+| `system.newbievendor.buy` | Buy a Kami from the Newbie Vendor (one-time, new accounts only) | Owner (payable) | [Marketplace](../player-api/marketplace.md) |
 
 ### Auction Systems
 
@@ -267,6 +268,7 @@ Most systems use `executeTyped(...)` as their typed entry point. However, some s
 | `system.harvest.start` | `executeTyped` / `executeBatched` | `executeTyped(uint256 kamiID, uint32 nodeIndex, uint256 taxerID, uint256 taxAmt) returns (bytes)` / `executeBatched(uint256[] kamiIDs, uint32 nodeIndex, uint256 taxerID, uint256 taxAmt) returns (bytes[])` |
 | `system.kamimarket.buy` | `executeTyped` (payable, array) | `executeTyped(uint256[] listingIDs) payable returns (bytes)` |
 | `system.kami.send` | `executeTyped` (overloaded) | `executeTyped(uint32, address)` / `executeTyped(uint32[], address)` |
+| `system.newbievendor.buy` | `executeTyped` (payable) / `calcPrice` | `executeTyped(uint32 kamiIndex) payable returns (bytes)` / `calcPrice() view returns (uint256)` |
 
 > When integrating, always check the actual Solidity source for the correct function name if `executeTyped()` reverts with "not implemented".
 

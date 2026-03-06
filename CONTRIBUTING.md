@@ -47,3 +47,29 @@ This validates:
 - Exactly one `Doc Class` line per markdown file.
 - Allowed `Doc Class` values.
 - Core boundary spot-check for workflow-only scheduling language.
+
+## Git Workflow
+
+1. **Fork** the repository and create a feature branch from `main`.
+2. **Branch naming:** `docs/topic-name` (e.g., `docs/fix-harvesting-formulas`, `docs/add-quest-rewards`).
+3. **Commit messages:** Use present tense, describe what changed and why (e.g., "Add gas limit table to harvesting.md").
+4. **One PR per topic** — keep changes focused. Don't mix unrelated doc updates.
+
+## Writing Style
+
+- Use plain, direct language. Avoid jargon unless defining it.
+- Code examples should be complete and runnable (include imports).
+- Use ethers.js v6 and ESM syntax in all JavaScript examples.
+- Markdown formatting: ATX headings (`##`), fenced code blocks with language tags, pipe tables for structured data.
+- Wallet types: use 🔐 **Owner** and 🎮 **Operator** badges consistently in API docs.
+
+## Development Setup
+
+```bash
+# Clone and validate
+git clone <your-fork-url>
+cd kamigotchi-docs
+./guidance/tools/validate-docs.sh
+```
+
+No build step or special tooling is required — the docs are plain Markdown files.

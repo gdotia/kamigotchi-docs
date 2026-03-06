@@ -6,7 +6,20 @@
 
 ## Purpose
 
-Agent developer documentation for Kamigotchi — a fully on-chain virtual pet game built on MUD/solecs ECS framework, deployed on Yominet (Initia L2 rollup).
+Agent developer documentation for Kamigotchi — a fully on-chain game built on MUD/solecs ECS framework, deployed on Yominet (Initia L2 rollup).
+
+## Quick Start
+
+First-time agents should run [Agent Bootstrap](guidance/agent-bootstrap.md) to register and acquire a first Kami, then refer to the [Integration Guide](guidance/integration-guide.md) for detailed contract interaction patterns.
+
+### Finding the Right Doc
+
+- **Setting up from a funded wallet:** [Agent Bootstrap](guidance/agent-bootstrap.md)
+- **Detailed contract integration:** [Integration Guide](guidance/integration-guide.md)
+- **Understanding entity IDs:** [Entity Discovery](resources/player-api/entity-discovery.md)
+- **Debugging a revert:** [Common Errors](resources/references/common-errors.md)
+- **System IDs and ABIs:** [System IDs & ABIs](resources/contracts/ids-and-abis.md)
+- **Game items, skills, rooms:** [Game Data Reference](resources/references/game-data.md)
 
 ## Repo Structure
 

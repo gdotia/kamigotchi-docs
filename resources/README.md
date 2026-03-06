@@ -29,29 +29,43 @@ Use Core Resources for:
 
 ### Player API (Canonical Interface Reference)
 
+**Foundation:**
+
 - [Overview & Setup](player-api/overview.md)
 - [Entity Discovery](player-api/entity-discovery.md)
 - [Echo](player-api/echo.md)
-- [Kami](player-api/kami.md)
+
+**Account & Kami:**
+
 - [Account](player-api/account.md)
+- [Kami](player-api/kami.md)
+- [Skills & Relationships](player-api/skills-and-relationships.md)
+
+**Gameplay:**
+
 - [Harvesting](player-api/harvesting.md)
 - [Quests](player-api/quests.md)
-- [Trading](player-api/trading.md)
-- [Social / Friends](player-api/social.md)
-- [Items & Crafting](player-api/items-and-crafting.md)
-- [Merchant Listings](player-api/listings.md)
-- [Skills & Relationships](player-api/skills-and-relationships.md)
 - [Goals & Scavenge](player-api/goals-and-scavenge.md)
-- [Gacha / Minting](player-api/minting.md)
+
+**Economy:**
+
+- [Items & Crafting](player-api/items-and-crafting.md)
+- [Trading](player-api/trading.md)
+- [Merchant Listings](player-api/listings.md)
 - [KamiSwap Marketplace](player-api/marketplace.md)
+- [Gacha / Minting](player-api/minting.md)
+
+**Infrastructure:**
+
 - [Kamiden Indexer](player-api/indexer.md)
 - [Portal (ERC721 / ERC20)](player-api/portal.md)
+- [Social / Friends](player-api/social.md)
 
-### Canonical Data and Diagnostics
+### References & Lookup Tables
 
-- [Game Data Reference](references/game-data.md)
-- [Common Errors](references/common-errors.md)
-- [Data Provenance & Freshness](references/data-provenance.md)
+- [Game Data Reference](references/game-data.md) — Items, skills, rooms, quests, equipment, traits
+- [Common Errors](references/common-errors.md) — Revert strings indexed by system
+- [Data Provenance & Freshness](references/data-provenance.md) — Verification timestamps and canonical sources
 
 ## Scope Boundary
 

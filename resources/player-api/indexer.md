@@ -324,6 +324,8 @@ Kamiden also indexes non-marketplace data:
 | `GetDeathsByKami` | `LeaderboardRequest` | `LeaderboardResponse` | Deaths grouped by Kami |
 | `GetPNLByKami` | `LeaderboardRequest` | `LeaderboardResponse` | Profit/loss by Kami |
 
+> **Documentation gap:** The methods above list request/response type names but do not yet include field-level documentation. Refer to the proto stubs (`packages/client/src/clients/kamiden/proto.ts` in the official repo) for exact field names, types, and defaults. Contributions documenting these methods are welcome — see [Contributing](../../CONTRIBUTING.md).
+
 > **Note:** `GetHarvestRanking` is defined in the proto stubs but currently returns `UNIMPLEMENTED` from the server.
 
 ---

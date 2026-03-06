@@ -150,6 +150,19 @@ console.log("Kamis rerolled!");
 
 ## Buy Gacha Tickets
 
+| Property | Value |
+|----------|-------|
+| **System ID** | `system.auction.buy` |
+| **Wallet** | 🔐 Owner |
+| **Gas** | Default |
+
+### Parameters
+
+| Name | Type | Description |
+|------|------|-------------|
+| `itemIndex` | `uint32` | Item to purchase (10 = Gacha Ticket) |
+| `amt` | `uint32` | Number of tickets to buy |
+
 Gacha tickets are purchased via the **auction system** (`system.auction.buy`) using a **Gradual Dutch Auction (GDA)** pricing model. Tickets cost **$MUSU** (item index 1).
 
 > **Important:** You must be on the **vending machine tile** (the auction room) to buy gacha tickets. Move there first with [account.move()](account.md#move).
@@ -215,6 +228,17 @@ console.log("Gacha ticket purchased via auction!");
                                                   ▼
                                              New traits!
 ```
+
+## Common Errors
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| Insufficient gacha tickets | Tried to mint without enough tickets | Buy tickets via `system.auction.buy` first |
+| Commit not found | Invalid commit ID passed to `reveal()` | Extract commit IDs from the mint transaction receipt |
+| Same-block reveal | Called `reveal()` in the same block as `mint()` | Wait at least 1 block (~2 seconds on Yominet) |
+| Insufficient MUSU | Cannot afford gacha ticket at current GDA price | Earn MUSU via harvesting, then retry |
+
+See [Common Errors](../references/common-errors.md) for the full error reference.
 
 ---
 

@@ -67,7 +67,13 @@ Components are on-chain key-value stores, keyed by **entity ID** (`uint256`). Th
 | `IDOwnsInventoryComponent` | Inventory ownership mapping (holder entity ID) |
 | `ValueComponent` | Inventory quantity / generic value storage |
 | `IndexRoomComponent` | Account room index |
-| ... | Many more |
+| `ViolenceComponent` | Kami violence stats |
+| `StateComponent` | Entity state (RESTING, HARVESTING, DEAD, etc.) |
+| `LevelComponent` | Kami level |
+| `XPComponent` | Kami experience points |
+| `IDOwnsKamiComponent` | Maps account entity to owned Kami entities |
+| `IndexItemComponent` | Item index for inventory/equipment entities |
+| `NameComponent` | Entity name storage |
 
 ### Entities
 
@@ -76,6 +82,20 @@ Every game object is an **entity** — a `uint256` identifier. Entities have no 
 - A **Kami** entity has `HealthComponent`, `PowerComponent`, `HarmonyComponent`, `ViolenceComponent`, etc.
 - An **Account** entity has `IDOwnsInventoryComponent`, `IndexRoomComponent`, etc.
 - A **Trade** entity has trade-specific components
+
+### Entity ID Derivation
+
+Entity IDs are deterministic — derived from known inputs using `keccak256`:
+
+| Entity Type | Derivation | Example |
+|-------------|-----------|---------|
+| Account | `uint256(uint160(ownerAddress))` | Owner `0xAbC...` -> entity `0xAbC...` as uint256 |
+| Kami | `keccak256(abi.encodePacked("kami.id", kamiIndex))` | Kami #42 -> `keccak256("kami.id", 42)` |
+| Harvest | `keccak256(abi.encodePacked("harvest", kamiEntityId))` | Per-Kami harvest state |
+| Inventory | `keccak256(abi.encodePacked("inventory.instance", accountId, itemIndex))` | Per-account per-item balance |
+| Trade | Non-deterministic — extract from transaction events | Use [Entity Discovery](player-api/entity-discovery.md) |
+
+See [Entity Discovery](player-api/entity-discovery.md) for the complete derivation reference and helper code.
 
 ---
 
@@ -192,6 +212,22 @@ Every player action follows this pattern:
 
 > **Note:** The World is a **registry**, not a proxy. It does not route or relay calls — clients resolve system addresses from the World and call them directly.
 
+### Permission Matrix
+
+| Action Category | Owner | Operator | Anyone |
+|----------------|-------|----------|--------|
+| Register account | Yes | - | - |
+| Set operator | Yes | - | - |
+| Buy Kami (KamiSwap) | Yes | - | - |
+| Gacha mint/reroll | Yes | - | - |
+| ERC721 stake/unstake | Yes | - | - |
+| Trade create/execute | Yes | - | - |
+| Move, chat, harvest | - | Yes | - |
+| Craft, quest, equip | - | Yes | - |
+| List/offer Kami | - | Yes | - |
+| Reveal minted Kamis | - | - | Yes |
+| Read state (Getter) | - | - | Yes |
+
 ### Resolving System Addresses
 
 System contract addresses are **not hardcoded** — they are dynamically resolved from the World contract:
@@ -239,7 +275,7 @@ Each stat has:
 | `base` | Innate stat from Kami species/rarity |
 | `shift` | Permanent modifications (leveling, items) |
 | `boost` | Temporary buffs/debuffs (percentage multiplier, 3 decimals of precision — baseline 1000 = 100.0%) |
-| `sync` | Synchronization bonus |
+| `sync` | Last synced value (tracks current depleted state for depletable stats like health/stamina) |
 
 **Effective stat formula:** `total = (1000 + boost) * (base + shift) / 1000`. The `boost` field is an `int32` stored with 1e3 precision, so a boost value of `250` means a +25.0% multiplier.
 
@@ -261,5 +297,5 @@ Each Kami has a state tracked by `StateComponent`, defined by the `KamiState` en
 
 - [Chain Configuration](chain-configuration.md) — Network details
 - [Live Addresses](contracts/live-addresses.md) — Contract addresses
-- [System IDs & ABIs](contracts/ids-and-abis.md) — All 67 system identifiers
+- [System IDs & ABIs](contracts/ids-and-abis.md) — All system identifiers
 - [Player API Overview](player-api/overview.md) — How to call systems

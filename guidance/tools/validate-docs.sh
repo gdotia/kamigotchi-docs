@@ -1,4 +1,14 @@
 #!/usr/bin/env bash
+# validate-docs.sh — Documentation quality gatekeeper for kamigotchi-docs
+#
+# Three-stage validation:
+#   Stage 1: Verify every .md file has exactly one Doc Class (Core Resource or Agent Guidance)
+#   Stage 2: Check all relative markdown links resolve to existing files
+#   Stage 3: Spot-check Core Resource files for workflow-only scheduling language
+#
+# Usage: ./guidance/tools/validate-docs.sh
+# Exit:  0 on success, 1 on any validation failure
+# Requires: python3
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -12,8 +22,11 @@ import sys
 
 root = Path.cwd()
 doc_class_re = re.compile(r"^> \*\*Doc Class:\*\* (.+)$", re.MULTILINE)
+# Matches inline links: [text](url)
 link_re = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
+# Matches fenced code blocks for exclusion from link checking
 code_fence_re = re.compile(r"```[\s\S]*?```")
+# Scheduling/workflow language that should not appear in Core Resource docs
 boundary_re = re.compile(r"cron|run every morning|every morning|daily automation|scheduled job", re.IGNORECASE)
 
 md_files = sorted(

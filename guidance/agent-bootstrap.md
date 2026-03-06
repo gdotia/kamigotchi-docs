@@ -43,12 +43,36 @@ Your bootstrap/runtime should then:
 
 > **Do not reuse the owner address as the operator address in this bootstrap flow.** The operator is derived from the owner, but it must be a different address.
 
+### Deriving an Operator Wallet
+
+The operator must be a different address from the owner. A simple deterministic derivation:
+
+```javascript
+import { ethers } from "ethers";
+
+const ownerWallet = new ethers.Wallet(process.env.OWNER_PRIVATE_KEY);
+
+// Derive operator key deterministically from owner key
+const operatorPrivateKey = ethers.keccak256(
+  ethers.solidityPacked(["string", "address"], ["kamigotchi.operator", ownerWallet.address])
+);
+const operatorWallet = new ethers.Wallet(operatorPrivateKey);
+
+console.log("Owner:", ownerWallet.address);
+console.log("Operator:", operatorWallet.address);
+
+// Export for use in bootstrap scripts
+process.env.OPERATOR_PRIVATE_KEY = operatorPrivateKey;
+```
+
+> This is one approach — any method that produces a distinct, deterministic operator address works. The key requirement is that Owner and Operator are different addresses.
+
 ### Bridge from Base
 
 Use the working Base -> Yominet route in [Yominet Bridge Tooling](tools/yominet-bridge/README.md):
 
 ```bash
-cd /home/matrix/kamigotchi-docs/guidance/tools/yominet-bridge
+cd guidance/tools/yominet-bridge   # relative to repo root
 npm init -y
 npm i ethers @initia/initia.js
 
@@ -156,6 +180,20 @@ console.log("Block:", block);
 console.log("Owner:", ownerSigner.address);
 console.log("Operator:", operatorSigner.address);
 console.log("system.account.register:", registerSystem);
+
+// Verify wallet balances
+const ownerBal = await provider.getBalance(ownerSigner.address);
+const operatorBal = await provider.getBalance(operatorSigner.address);
+console.log("Owner balance:", ethers.formatEther(ownerBal), "ETH");
+console.log("Operator balance:", ethers.formatEther(operatorBal), "ETH");
+if (ownerBal === 0n) console.warn("WARNING: Owner has no ETH on Yominet. Bridge ETH first.");
+if (operatorBal === 0n) console.warn("WARNING: Operator has no ETH. Transfer gas from Owner.");
+
+// Validate account name
+const nameBytes = ethers.toUtf8Bytes(process.env.KAMI_ACCOUNT_NAME || "");
+if (nameBytes.length < 1 || nameBytes.length > 15) {
+  console.warn(`WARNING: Account name must be 1-15 bytes, got ${nameBytes.length}.`);
+}
 ```
 
 Run it:

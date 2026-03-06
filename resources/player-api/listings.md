@@ -139,6 +139,32 @@ console.log("Auction item purchased!");
 
 > **Note:** Auctions use a Gradual Dutch Auction (GDA) pricing model. Each auction is created with: a sale item index, a payment item index, a target price, a time period, a decay rate, an emission rate, a max supply, and a start timestamp. The price decays over time until purchased. The `AuctionBuySystem` ABI is `executeTyped(uint32 itemIndex, uint32 amt)` — it calculates the current GDA price, deducts the payment currency, and credits the purchased item. Auction parameters are set via registry — query on-chain for current auctions.
 
+### GDA Pricing Explained
+
+Gradual Dutch Auction pricing works as follows:
+
+- Each auction starts with a **target price** and **decay rate**
+- The price decreases over time until someone buys
+- Each purchase resets the price curve upward
+- This creates a self-regulating market price
+
+To check the current price without buying, use `staticCall`:
+
+```javascript
+try {
+  await auctionSystem.executeTyped.staticCall(itemIndex, 1);
+  console.log("Current price is affordable");
+} catch (e) {
+  console.log("Cannot afford at current price or auction inactive");
+}
+```
+
+### Wallet Type Reference
+
+Throughout this documentation:
+- 🔐 **Owner** — Must be called from the owner wallet
+- 🎮 **Operator** — Can be called from the operator wallet
+
 ---
 
 ## Related Pages

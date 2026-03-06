@@ -16,3 +16,20 @@ Use this page as the freshness authority for mutable game and protocol datasets.
 | System IDs and ABIs | `packages/contracts/src/systems/` in official repo + deployed system resolution | Hash system IDs, resolve addresses on-chain, and compare function signatures to source ABIs | [contracts/ids-and-abis.md](../contracts/ids-and-abis.md), [player-api/](../player-api/overview.md) | Docs maintainers | 2026-03-05 / `Asphodel-OS/kamigotchi@6412311f` |
 | Marketplace entities/listings/offers | On-chain marketplace components + Kamiden indexer schemas | Validate event/component fields against indexer responses and source structs | [player-api/marketplace.md](../player-api/marketplace.md), [player-api/indexer.md](../player-api/indexer.md) | Docs maintainers | 2026-03-05 / `Asphodel-OS/kamigotchi@6412311f` |
 | Indexer endpoints and proto contracts | Kamiden service definitions and generated proto clients in official repo | Re-generate or diff proto/client definitions against documented methods | [player-api/indexer.md](../player-api/indexer.md) | Docs maintainers | 2026-03-05 / `Asphodel-OS/kamigotchi@6412311f` |
+
+## Verification Cadence
+
+| Data Category | Trigger | Frequency |
+|---------------|---------|-----------|
+| Contract addresses | On deployment or upgrade | Per deployment |
+| System IDs and ABIs | On new system deployment | Per deployment |
+| Game data (items, skills, rooms) | On balance patch or content update | Monthly or on patch |
+| Indexer endpoints | On service update | Every 2 weeks |
+
+### Discrepancy Resolution
+
+If you find a mismatch between these docs and on-chain state:
+
+1. Query the on-chain component directly (e.g., `world.systems()` for system addresses)
+2. Compare with the value documented here
+3. Submit a PR updating both the relevant doc page and this provenance table

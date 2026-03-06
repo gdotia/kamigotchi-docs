@@ -167,6 +167,35 @@ You can query the harvest entity's on-chain components to check accumulated rewa
 
 ---
 
+### Newbie Vendor (`system.newbievendor.buy`)
+
+| Revert String | Meaning |
+|---------------|---------|
+| `"NewbieVendor: disabled"` | Vendor is currently disabled by admin config |
+| `"NewbieVendor: already purchased"` | Account already used the one-time purchase |
+| `"NewbieVendor: account too old"` | Account was registered more than 24 hours ago |
+| `"NewbieVendor: insufficient ETH"` | `msg.value` is less than `calcPrice()` |
+| `"NewbieVendor: pool empty"` | No Kamis available in the vendor pool |
+| `"NewbieVendor: kami not on display"` | Selected Kami is not in the current display window |
+| `"NewbieVendor: kami not found"` | Kami index does not resolve to a valid entity |
+| `"NewbieVendor: ETH transfer failed"` | ETH transfer to vendor address or refund failed |
+
+### Portal Systems
+
+| Revert String | System | Meaning |
+|---------------|--------|---------|
+| Refer to proto stubs for portal-specific errors | `system.erc20.portal` | Portal deposit/withdraw/claim errors |
+
+### Crafting
+
+| Revert String | System | Meaning |
+|---------------|--------|---------|
+| Refer to contract source for craft-specific errors | `system.craft` | Crafting requirement failures |
+
+> **Note:** Portal and crafting error strings are not yet fully catalogued. Check the contract source at `packages/contracts/src/systems/` for exact revert messages. Contributions welcome — see [Contributing](../../CONTRIBUTING.md).
+
+---
+
 ## See Also
 
 - [Overview — Error Handling](../player-api/overview.md#error-handling) — How to catch and parse revert reasons

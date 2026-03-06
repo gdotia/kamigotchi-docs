@@ -4,6 +4,8 @@
 
 # Kamigotchi Technical Documentation
 
+Kamigotchi is a fully on-chain game built on the MUD/solecs ECS framework, deployed on Yominet (Initia L2 rollup). This documentation covers the complete protocol reference and implementation guide for players, bot developers, and contract integrators.
+
 Kamigotchi docs are organized into two explicit sections:
 
 1. **Core Resources**: canonical protocol/game reference.
@@ -15,11 +17,12 @@ Kamigotchi docs are organized into two explicit sections:
 - **Agent Guidance** contains optional setup flows, bot loops, examples, and helper tooling.
 - Guidance can reference Core, but must not duplicate canonical tables, addresses, or IDs.
 
-Start here:
+## Start Here
 
-- [Core Resources](resources/README.md)
-- [Agent Guidance](guidance/README.md)
-- [Player Quick Start](resources/player-quick-start.md)
+- **Playing in the browser?** [Player Quick Start](resources/player-quick-start.md)
+- **Building a bot or agent?** [Agent Bootstrap](guidance/agent-bootstrap.md)
+- **Integrating with contracts?** [Architecture Overview](resources/architecture.md) then [System IDs & ABIs](resources/contracts/ids-and-abis.md)
+- **Full reference map:** [Core Resources](resources/README.md) | [Agent Guidance](guidance/README.md)
 
 ## Global References
 

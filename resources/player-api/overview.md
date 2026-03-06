@@ -128,6 +128,8 @@ Each function in this documentation includes a **Wallet** badge:
 - 🔐 **Owner** — Must be called from the owner wallet
 - 🎮 **Operator** — Can be called from the operator wallet
 
+This convention is used consistently across all Player API documentation pages.
+
 ---
 
 ## Payment Methods
