@@ -39,7 +39,7 @@ Use one of these bot-oriented paths:
 | Action | Cost | Currency |
 |--------|------|----------|
 | Gas (thousands of txs) | ~0.001 ETH | Native ETH |
-| KamiSwap (first Kami) | Variable | Native ETH (msg.value) |
+| KamiSwap (first Kami) | Variable (~0.01 ETH) | Native ETH (msg.value) |
 | Gacha ticket (public) | $MUSU (GDA pricing) | In-game $MUSU (item 1, earned via harvesting) |
 | Marketplace listing | Variable | Native ETH (msg.value) |
 | Marketplace offer | Variable | WETH (approval-based) |
@@ -343,83 +343,11 @@ await (await buySystem.executeTyped([listingId], { value: listingPrice })).wait(
 console.log(`Purchased Kami #${selected.KamiIndex}`);
 ```
 
-### Option B: Gacha Minting
+### Option B: Receive via In-Game Transfer
 
-The standard gacha flow is: **earn $MUSU → buy a gacha ticket via auction → mint → reveal**.
+Another player can send you a Kami using `system.kami.send`. The Kami arrives in your account automatically — no staking required. There is a **60-minute cooldown** after receiving a Kami before you can use it in gameplay.
 
-> **Important:** Gacha tickets are purchased with **$MUSU** (item index 1) via the auction system (`system.auction.buy`) using Gradual Dutch Auction pricing. You must be on the vending machine tile.
-
-```javascript
-// 1. Buy a gacha ticket via auction (costs $MUSU — GDA pricing)
-const BUY_ABI = ["function executeTyped(uint32 itemIndex, uint32 amt) returns (bytes)"];
-const buySystem = await getSystem("system.auction.buy", BUY_ABI, ownerSigner);
-
-await (await buySystem.executeTyped(10, 1)).wait(); // item 10 = Gacha Ticket
-console.log("Gacha ticket purchased!");
-
-// 2. Mint — commits the randomness (consumes the ticket)
-const MINT_ABI = ["function executeTyped(uint256 amount) returns (bytes)"];
-const mintSystem = await getSystem("system.kami.gacha.mint", MINT_ABI, ownerSigner);
-
-const mintAmount = 1;
-
-// Preflight only: staticCall can drift from mined results if state changes.
-const encodedPreflightCommitIds = await mintSystem.executeTyped.staticCall(mintAmount, {
-  gasLimit: 7_000_000,
-});
-const [preflightCommitIds] = ethers.AbiCoder.defaultAbiCoder().decode(
-  ["uint256[]"],
-  encodedPreflightCommitIds
-);
-
-const mintTx = await mintSystem.executeTyped(mintAmount, { gasLimit: 7_000_000 });
-const mintReceipt = await mintTx.wait();
-console.log("Mint committed!");
-
-async function resolveCommitIds(mintTxHash, fallbackIds) {
-  // Expected indexer response: { "commitIds": ["123", "456"] }
-  const indexerBaseUrl = process.env.KAMIGOTCHI_INDEXER_URL;
-  if (!indexerBaseUrl) return fallbackIds;
-
-  const url = `${indexerBaseUrl}/gacha/commits?mintTxHash=${mintTxHash}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Failed to fetch commit IDs from indexer (${res.status})`);
-
-  const payload = await res.json();
-  if (!Array.isArray(payload.commitIds) || payload.commitIds.length === 0) {
-    throw new Error("Indexer response missing commitIds");
-  }
-  return payload.commitIds.map((v) => BigInt(v));
-}
-
-const commitIdArray = await resolveCommitIds(mintReceipt.hash, preflightCommitIds);
-console.log("Commit IDs:", commitIdArray, "Mint tx:", mintReceipt.hash);
-
-// 3. Reveal — determines the Kami's traits (species, stats, rarity)
-// Note: there may be a minimum block delay between mint and reveal
-const REVEAL_ABI = ["function reveal(uint256[] rawCommitIDs) external returns (uint256[])"];
-const revealSystem = await getSystem("system.kami.gacha.reveal", REVEAL_ABI, ownerSigner);
-
-const revealTx = await revealSystem.reveal(commitIdArray);
-await revealTx.wait();
-console.log("Kami revealed!");
-```
-
-> **Pricing:** Gacha tickets are purchased with $MUSU via a Gradual Dutch Auction (GDA) on the vending machine tile. Price decays over time and resets on each purchase. See [Gacha / Minting](../resources/player-api/minting.md) for full details.
-
-### Option C: Buy from the Marketplace or Trade
-
-Use the in-game [KamiSwap Marketplace](../resources/player-api/marketplace.md) to buy a Kami from another player's listing, or use the [Trading](../resources/player-api/trading.md) system for direct player-to-player trades.
-
-### Option D: Receive via ERC-721 Transfer + Stake
-
-If someone sends you a Kami721 NFT directly (ERC-721 transfer), you'll need to **stake** it into the game before it becomes playable:
-
-1. Approve the World contract for the NFT
-2. Move to Room 12 (Scrap Confluence / Bridge)
-3. Call `system.kami721.stake` with the token index
-
-See [Step 8: Stake a Kami NFT](#step-8-stake-a-kami-nft) for the full code example.
+See [Trading](../resources/player-api/trading.md) for direct player-to-player item trades.
 
 ---
 
@@ -510,38 +438,6 @@ const getter = new ethers.Contract(getterAddr, GETTER_ABI, provider);
 const kamiData = await getter.getKami(kamiId);
 console.log("Kami data:", kamiData);
 ```
-
----
-
-## Step 8: Stake a Kami NFT
-
-```javascript
-const KAMI721_ADDRESS = "0x5d4376b62fa8ac16dfabe6a9861e11c33a48c677";
-
-// The ERC-721 token ID is also the tokenIndex for the stake system
-const tokenIndex = tokenId; // For Kami721, token ID === token index
-
-// Approve NFT transfer
-const kami721 = new ethers.Contract(
-  KAMI721_ADDRESS,
-  ["function approve(address to, uint256 tokenId)"],
-  ownerSigner
-);
-await (await kami721.approve(WORLD_ADDRESS, tokenIndex)).wait();
-
-// Stake into game
-const STAKE_ABI = ["function executeTyped(uint32 tokenIndex) returns (bytes)"];
-const stakeSystem = await getSystem(
-  "system.kami721.stake",
-  STAKE_ABI,
-  ownerSigner
-);
-
-await (await stakeSystem.executeTyped(tokenIndex)).wait();
-console.log("Kami NFT staked into game!");
-```
-
-> **Note:** For Kami721 NFTs, the ERC-721 `tokenId` from the NFT contract IS the `tokenIndex` parameter passed to the stake system. They are the same value. The account must be in room 12 (Scrap Confluence / Bridge) to stake.
 
 ---
 
@@ -1059,7 +955,6 @@ async function sendWithRetry(system, method, args, overrides = {}) {
 | System address is `0x0` | Check the system ID string for typos |
 | Transaction reverts silently | Wrap in try/catch and check `error.reason` |
 | Stale UI data | Call `echo.kamis()` or `echo.room()` to force-emit |
-| NFT staking fails | Approve the World contract first |
 | ERC20 deposit fails | Approve the World contract for the token amount |
 
 ---
