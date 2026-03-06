@@ -22,7 +22,12 @@ For the current Yominet network settings and wallet setup notes, see [Chain Conf
 
 There is no faucet on Yominet. Fund your wallet with bridged ETH before registering.
 
-For supported routes and the latest chain details, see [Chain Configuration](chain-configuration.md).
+Use one of these routes:
+
+1. **In-game bridge (recommended):** Open Kamigotchi, then go to **Settings > Bridge**. See [Chain Configuration - Option 1: Kamigotchi In-Game Bridge](chain-configuration.md#option-1-kamigotchi-in-game-bridge-recommended).
+2. **Official Initia Bridge:** Use [app.initia.xyz](https://app.initia.xyz/?openBridge=true). See [Chain Configuration - Option 2: Initia Bridge](chain-configuration.md#option-2-initia-bridge).
+
+For source chain support and current network details, see [Chain Configuration](chain-configuration.md).
 
 ## 4) Register Your Account
 
