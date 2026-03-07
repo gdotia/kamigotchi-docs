@@ -19,13 +19,16 @@ Kamigotchi docs are organized into two explicit sections:
 
 ## Start Here
 
-- **Building a bot or playing with an agent?** [Agent Bootstrap](guidance/agent-bootstrap.md)
+- **Building a bot, script, or tool?** [Agent Bootstrap](guidance/agent-bootstrap.md) → [Player API Index](resources/player-api/README.md)
+- **Playing with an agent?** [Agent Bootstrap](guidance/agent-bootstrap.md)
 - **Integrating with contracts?** [Architecture Overview](resources/architecture.md) then [System IDs & ABIs](resources/contracts/ids-and-abis.md)
 - **Full reference map:** [Core Resources](resources/README.md) | [Agent Guidance](guidance/README.md)
 - **Playing in the browser?** [Player Quick Start](resources/player-quick-start.md)
 
 ## Global References
 
+- [LLM Usage Guide](LLM_USAGE.md)
+- [Skill Entry Point](SKILL.md)
 - [Data Provenance & Freshness](resources/references/data-provenance.md)
 - [Contributing Guide](CONTRIBUTING.md)
 
